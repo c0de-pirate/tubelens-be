@@ -17,16 +17,25 @@ public class TrendingVideo {
 
     private String title;
 
-    private String thumbnail;
+    private String thumbnails;
+
+    private String embedHtml ;
+    
+    private String publishedAt ;
+    
+    private String description ;
+    
+    private String channelTitle ;
+    
+    private String viewCount ;
+    
+    private String likeCount ;
+    
+    private String commentCount ;
 
     @ElementCollection
     private List<String> tags;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
     @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDateTime updated_at;
 }
