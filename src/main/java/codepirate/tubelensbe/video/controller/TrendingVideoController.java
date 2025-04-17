@@ -17,8 +17,8 @@ public class TrendingVideoController {
         this.trendingVideoService = trendingVideoService;
     }
 
-    @PostMapping("/videoInsert")
-    public List<TrendingVideo> videoInsert() {
-
-    }
+//    @PostMapping("/videoInsert")
+//    public List<TrendingVideo> videoInsert() {
+//
+//    }
 }
