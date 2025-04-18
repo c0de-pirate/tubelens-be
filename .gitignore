@@ -220,3 +220,6 @@ gradle-app.setting
 ### Gradle Patch ###
 # Java heap dump
 *.hprof
+
+# Ignore application-dev.yml (configuration for development environment)
+src/main/resources/application-dev.yaml
