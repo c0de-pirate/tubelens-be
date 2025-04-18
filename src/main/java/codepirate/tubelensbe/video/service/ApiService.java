@@ -31,7 +31,6 @@ public class ApiService {
     }
 
     public void insertVideos(VideoParam param) throws IOException {
-        log.info("service");
 //         JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
         JsonFactory jsonFactory = new JacksonFactory();
 
@@ -53,6 +52,10 @@ public class ApiService {
 
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
+
+        if (videoListResponse.get("error") != null) {
+            return;
+        }
 
         // 검색 결과에서 동영상 목록 가져오기
         List<Video> videoResponseList = videoListResponse.getItems();
