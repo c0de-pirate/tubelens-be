@@ -6,7 +6,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/tubelens?serverTimezone=Asia/Seoul
     username: root
-    password: 5609yang
+    password: test
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
@@ -16,4 +16,4 @@ spring:
         format_sql: true
 
 server:
-  port: 8084
+  port: 8080

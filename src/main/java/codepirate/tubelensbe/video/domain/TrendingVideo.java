@@ -1,15 +1,21 @@
 package codepirate.tubelensbe.video.domain;
 
+import com.google.api.client.util.DateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
+@Setter
 @Entity
 public class TrendingVideo {
     @Id
@@ -21,17 +27,18 @@ public class TrendingVideo {
 
     private String embedHtml ;
     
-    private String publishedAt ;
-    
+    private DateTime publishedAt ;
+
+    @Column(length = 2000)
     private String description ;
     
     private String channelTitle ;
     
-    private String viewCount ;
+    private BigInteger viewCount ;
     
-    private String likeCount ;
+    private BigInteger likeCount ;
     
-    private String commentCount ;
+    private BigInteger commentCount ;
 
     @ElementCollection
     private List<String> tags;
