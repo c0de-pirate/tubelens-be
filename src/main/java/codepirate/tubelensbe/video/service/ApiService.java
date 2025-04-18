@@ -77,6 +77,7 @@ public class ApiService {
             trendingVideo.setViewCount(v.getStatistics().getViewCount());
             trendingVideo.setLikeCount(v.getStatistics().getLikeCount());
             trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
+            trendingVideo.setTags(v.getSnippet().getTags());
 
             trendingVideoList.add(trendingVideo);
         }
