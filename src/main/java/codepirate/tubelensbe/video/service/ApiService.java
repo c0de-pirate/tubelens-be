@@ -39,6 +39,7 @@ public class ApiService {
                 new NetHttpTransport(),
                 jsonFactory,
                 request -> {})
+                .setApplicationName("tubelens")
                 .build();
 
         // YouTube Search API를 사용하여 동영상 검색을 위한 요청 객체 생성
