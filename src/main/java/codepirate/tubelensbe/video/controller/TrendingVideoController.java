@@ -28,7 +28,7 @@ public class TrendingVideoController {
         this.trendingVideoService = trendingVideoService;
         this.apiService = apiService;
     }
-
+  
     @GetMapping("/videos")
     @ResponseBody
     public void videoInsert(
