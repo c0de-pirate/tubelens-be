@@ -1,0 +1,7 @@
+ARG ELK_VERSION
+FROM docker.elastic.co/logstash/logstash:${ELK_VERSION}
+
+USER root
+RUN mkdir -p /var/lib/logstash && \
+    chown -R logstash:logstash /var/lib/logstash
+USER logstash
