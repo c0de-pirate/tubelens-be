@@ -19,15 +19,16 @@ import java.io.IOException;
 @Controller
 public class TrendingVideoController {
     private final TrendingVideoService trendingVideoService;
-    private final ApiService apiService = new ApiService();
+    private final ApiService apiService;
 
     private static final Logger log = LoggerFactory.getLogger(TrendingVideoController.class);
 
-    public TrendingVideoController(TrendingVideoService trendingVideoService) {
+    public TrendingVideoController(TrendingVideoService trendingVideoService, ApiService apiService) {
         this.trendingVideoService = trendingVideoService;
+        this.apiService = apiService;
     }
 
-    @GetMapping("/video")
+    @GetMapping("/videos")
     public void videoInsert(
             @RequestParam String part,
             @RequestParam String chart,
@@ -38,6 +39,7 @@ public class TrendingVideoController {
     )
             throws IOException {
         VideoParam videoParam = new VideoParam(part, chart, regionCode, videoCategoryId, maxResults, key);
+        log.info(String.valueOf(maxResults));
         apiService.insertVideos(videoParam);
     }
 }
