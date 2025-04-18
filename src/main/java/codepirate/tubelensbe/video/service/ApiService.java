@@ -54,19 +54,18 @@ public class ApiService {
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
 
-//        // 검색 결과에서 동영상 목록 가져오기
+        // 검색 결과에서 동영상 목록 가져오기
         List<Video> videoResponseList = videoListResponse.getItems();
-//        log.info(videoResponseList.get(0).getSnippet().getTitle());
 
         List<TrendingVideo> trendingVideoList = new ArrayList<>();
         log.info(String.valueOf(videoResponseList.size()));
         for (Video v : videoResponseList) {
             TrendingVideo trendingVideo = new TrendingVideo();
 
+            //<iframe> 제외, 링크만 저장
             String[] iframe = v.getPlayer().getEmbedHtml().split(" ");
             String link = iframe[3].split("\"")[1];
             String src = link.substring(2, link.length());
-//            log.info(src);
 
             trendingVideo.setId(v.getId());
             trendingVideo.setTitle(v.getSnippet().getTitle());
