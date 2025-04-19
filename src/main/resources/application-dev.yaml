@@ -1,0 +1,28 @@
+spring:
+
+  application:
+    name: tubelens
+
+  elasticsearch:
+    uris: http://localhost:9200
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/tubelens?serverTimezone=Asia/Seoul
+    username: root
+    password: 991209
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+
+youtube:
+  api:
+    key: AIzaSyAFJ-9-O9NrfgYuFCvmnCAHJ-viUu5xnjA
+
+server:
+  port: 8080
+
