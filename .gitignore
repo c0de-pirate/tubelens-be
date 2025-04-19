@@ -222,6 +222,10 @@ gradle-app.setting
 ### Gradle Patch ###
 # Java heap dump
 *.hprof
+**/data/**
 
 # Ignore application-dev.yml (configuration for development environment)
 src/main/resources/application-dev.yaml
+
+# Elasticsearch data
+elasticsearch/data/

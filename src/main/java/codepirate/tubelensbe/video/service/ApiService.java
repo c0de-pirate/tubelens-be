@@ -6,6 +6,7 @@ import codepirate.tubelensbe.video.repository.TrendingVideoRepository;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
@@ -16,6 +17,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,13 +71,19 @@ public class ApiService {
             trendingVideo.setTitle(v.getSnippet().getTitle());
             trendingVideo.setThumbnails(v.getSnippet().getThumbnails().getMedium().getUrl());
             trendingVideo.setEmbedHtml(src);
-            trendingVideo.setPublishedAt(v.getSnippet().getPublishedAt());
             trendingVideo.setDescription(v.getSnippet().getDescription());
             trendingVideo.setChannelTitle(v.getSnippet().getChannelTitle());
-            trendingVideo.setViewCount(v.getStatistics().getViewCount());
-            trendingVideo.setLikeCount(v.getStatistics().getLikeCount());
-            trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
+            trendingVideo.setViewCount(String.valueOf(v.getStatistics().getViewCount()));
+            trendingVideo.setLikeCount(String.valueOf(v.getStatistics().getLikeCount()));
+            trendingVideo.setCommentCount(String.valueOf(v.getStatistics().getCommentCount()));
             trendingVideo.setTags(v.getSnippet().getTags());
+
+            // DateTime을 OffsetDateTime으로 변환
+            OffsetDateTime offsetDateTime = OffsetDateTime.parse(v.getSnippet().getPublishedAt().toString());
+
+            // publishedAt에 OffsetDateTime을 설정
+            trendingVideo.setPublishedAt(offsetDateTime);
+
 
             trendingVideoList.add(trendingVideo);
         }
