@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,14 +31,12 @@ public class ApiService {
     private static final Logger log = LoggerFactory.getLogger(ApiService.class);
     private final TrendingVideoRepositoryCustom trendingVideoRepositoryCustom;
 
-//    @Value("${youtube.api.key}")
-//    private String apiKey;
-
     public ApiService(TrendingVideoRepositoryCustom trendingVideoRepositoryCustom) {
         this.trendingVideoRepositoryCustom = trendingVideoRepositoryCustom;
     }
 
     public void insertVideos(VideoParam param) throws IOException {
+
 //         JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
         JsonFactory jsonFactory = new JacksonFactory();
 
@@ -60,12 +60,16 @@ public class ApiService {
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
 
+        log.info(String.valueOf(videoListResponse.getItems().size()));
+
         if (videoListResponse.get("error") != null) {
             return;
         }
 
         // 검색 결과에서 동영상 목록 가져오기
         List<Video> videoResponseList = videoListResponse.getItems();
+
+        log.info(String.valueOf(videoResponseList.size()));
 
         List<TrendingVideo> trendingVideoList = new ArrayList<>();
         for (Video v : videoResponseList) {
@@ -76,10 +80,13 @@ public class ApiService {
             String link = iframe[3].split("\"")[1];
             String src = link.substring(2, link.length());
 
+            OffsetDateTime offsetDateTime = OffsetDateTime.parse(v.getSnippet().getPublishedAt().toString());
+
             trendingVideo.setId(v.getId());
             trendingVideo.setTitle(v.getSnippet().getTitle());
             trendingVideo.setThumbnails(v.getSnippet().getThumbnails().getMedium().getUrl());
             trendingVideo.setEmbedHtml(src);
+            trendingVideo.setPublishedAt(offsetDateTime);
             trendingVideo.setDescription(v.getSnippet().getDescription());
             trendingVideo.setChannelTitle(v.getSnippet().getChannelTitle());
             trendingVideo.setViewCount(v.getStatistics().getViewCount());
