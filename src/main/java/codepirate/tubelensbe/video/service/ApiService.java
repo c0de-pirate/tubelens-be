@@ -3,9 +3,12 @@ package codepirate.tubelensbe.video.service;
 import codepirate.tubelensbe.video.domain.TrendingVideo;
 import codepirate.tubelensbe.video.dto.VideoParam;
 import codepirate.tubelensbe.video.repository.TrendingVideoRepository;
+import codepirate.tubelensbe.video.repository.TrendingVideoRepositoryCustom;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.DateTime;
+import com.google.api.client.util.Value;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.SearchListResponse;
 import com.google.api.services.youtube.model.SearchResult;
@@ -13,10 +16,10 @@ import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -24,10 +27,13 @@ import java.util.List;
 @Service
 public class ApiService {
     private static final Logger log = LoggerFactory.getLogger(ApiService.class);
-    private final TrendingVideoRepository trendingVideoRepository;
+    private final TrendingVideoRepositoryCustom trendingVideoRepositoryCustom;
 
-    public ApiService(TrendingVideoRepository trendingVideoRepository) {
-        this.trendingVideoRepository = trendingVideoRepository;
+//    @Value("${youtube.api.key}")
+//    private String apiKey;
+
+    public ApiService(TrendingVideoRepositoryCustom trendingVideoRepositoryCustom) {
+        this.trendingVideoRepositoryCustom = trendingVideoRepositoryCustom;
     }
 
     public void insertVideos(VideoParam param) throws IOException {
@@ -51,8 +57,12 @@ public class ApiService {
         video.set("maxResults", param.getMaxResults());
         video.set("key", param.getKey());
 
+        log.info(param.getKey());
+
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
+
+        log.info("apiservice!!!!!!!!!!");
 
         if (videoListResponse.get("error") != null) {
             return;
@@ -62,7 +72,6 @@ public class ApiService {
         List<Video> videoResponseList = videoListResponse.getItems();
 
         List<TrendingVideo> trendingVideoList = new ArrayList<>();
-        log.info(String.valueOf(videoResponseList.size()));
         for (Video v : videoResponseList) {
             TrendingVideo trendingVideo = new TrendingVideo();
 
@@ -75,7 +84,6 @@ public class ApiService {
             trendingVideo.setTitle(v.getSnippet().getTitle());
             trendingVideo.setThumbnails(v.getSnippet().getThumbnails().getMedium().getUrl());
             trendingVideo.setEmbedHtml(src);
-            trendingVideo.setPublishedAt(v.getSnippet().getPublishedAt());
             trendingVideo.setDescription(v.getSnippet().getDescription());
             trendingVideo.setChannelTitle(v.getSnippet().getChannelTitle());
             trendingVideo.setViewCount(v.getStatistics().getViewCount());
@@ -83,9 +91,11 @@ public class ApiService {
             trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
             trendingVideo.setTags(v.getSnippet().getTags());
 
+            log.info(trendingVideo.getTitle());
+
             trendingVideoList.add(trendingVideo);
         }
 
-        trendingVideoRepository.saveAll(trendingVideoList);
+        trendingVideoRepositoryCustom.batchInsertIgnore(trendingVideoList);
     }
 }

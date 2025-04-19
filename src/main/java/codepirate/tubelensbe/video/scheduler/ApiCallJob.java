@@ -46,7 +46,7 @@ public class ApiCallJob implements Job {
                     "KR",
                     id,
                     50L,
-                    youtubeApiKey
+                    "key"
             );
 
             try {

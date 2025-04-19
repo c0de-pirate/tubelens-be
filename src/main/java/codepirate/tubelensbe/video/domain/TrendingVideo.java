@@ -23,8 +23,6 @@ public class TrendingVideo {
     private String thumbnails;
 
     private String embedHtml ;
-    
-    private DateTime publishedAt ;
 
     @Lob
     @Column(columnDefinition = "TEXT")
