@@ -1,12 +1,7 @@
 package codepirate.tubelensbe.video.repository;
 
 import codepirate.tubelensbe.video.domain.TrendingVideo;
-import codepirate.tubelensbe.video.service.ApiService;
-import com.google.api.services.youtube.model.Video;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -23,7 +18,6 @@ import java.util.List;
 public class TrendingVideoRepositoryCustomImpl implements TrendingVideoRepositoryCustom {
 
     private final JdbcTemplate jdbcTemplate;
-    private static final Logger log = LoggerFactory.getLogger(ApiService.class);
 
     public void batchInsertIgnore(List<TrendingVideo> videoList) {
         String sql = """
