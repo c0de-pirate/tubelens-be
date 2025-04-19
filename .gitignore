@@ -74,6 +74,8 @@ cmake-build-*/
 
 # IntelliJ
 out/
+*.iml
+.idea/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -120,6 +122,8 @@ fabric.properties
 .idea/**/markdown-navigator.xml
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
+
+infra/elk/elasticsearch/data
 
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257
@@ -218,4 +222,6 @@ gradle-app.setting
 ### Gradle Patch ###
 # Java heap dump
 *.hprof
-**/data/**
+
+# Ignore application-dev.yml (configuration for development environment)
+src/main/resources/application-dev.yaml
