@@ -2,28 +2,22 @@ package codepirate.tubelensbe.search.domain;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VideoSearch {
     private String title;
     private String thumbnails;
-    @Column(name = "channel_title")
-    private String channelTitle;
-    @Column(name = "view_count")
-    private Long viewCount;
 
-    public VideoSearch(String title, String thumbnails, String channelTitle, Long viewCount) {
-        this.title = title;
-        this.thumbnails = thumbnails;
-        this.channelTitle = channelTitle;
-        this.viewCount = viewCount;
-    }
+    @JsonProperty("channel_title") // JSON에서 "channel_title"과 매핑
+    private String channelTitle;
+
+    @JsonProperty("view_count") // JSON에서 "view_count"와 매핑
+    private String viewCount;
 }
 

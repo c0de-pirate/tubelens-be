@@ -18,4 +18,8 @@ public class ElasticSearchService {
     public List<VideoSearch> searchVideos(String keyword) throws IOException {
         return elasticSearchRepository.searchByTitle(keyword);
     }
+
+    public List<String> autocomplete(String keyword) throws IOException {
+        return elasticSearchRepository.autocomplete(keyword);
+    }
 }
