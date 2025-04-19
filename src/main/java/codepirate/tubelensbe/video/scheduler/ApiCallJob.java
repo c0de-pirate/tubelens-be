@@ -2,17 +2,15 @@ package codepirate.tubelensbe.video.scheduler;
 
 import codepirate.tubelensbe.video.dto.VideoParam;
 import codepirate.tubelensbe.video.service.ApiService;
-import codepirate.tubelensbe.video.service.TrendingVideoService;
-import com.google.api.client.util.Value;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.List;
@@ -46,7 +44,7 @@ public class ApiCallJob implements Job {
                     "KR",
                     id,
                     50L,
-                    "key"
+                    youtubeApiKey
             );
 
             try {
