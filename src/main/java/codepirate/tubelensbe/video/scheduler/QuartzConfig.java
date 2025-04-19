@@ -21,7 +21,7 @@ public class QuartzConfig {
                 .forJob(apiCallJobDetail())
                 .withIdentity("apiCallTrigger")
                 .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                        .withIntervalInMinutes(15)
+                        .withIntervalInMinutes(1)
                         .repeatForever())
                 .build();
     }
