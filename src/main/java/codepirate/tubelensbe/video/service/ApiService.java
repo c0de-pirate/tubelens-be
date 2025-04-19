@@ -57,12 +57,8 @@ public class ApiService {
         video.set("maxResults", param.getMaxResults());
         video.set("key", param.getKey());
 
-        log.info(param.getKey());
-
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
-
-        log.info("apiservice!!!!!!!!!!");
 
         if (videoListResponse.get("error") != null) {
             return;
