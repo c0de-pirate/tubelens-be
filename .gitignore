@@ -123,6 +123,8 @@ fabric.properties
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
 
+infra/elk/elasticsearch/data
+
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257
 .idea/$CACHE_FILE$
@@ -221,5 +223,8 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-# Ignore application-dev.yml (configuration for development environment)
+# application-dev.yml 제외
 src/main/resources/application-dev.yaml
+
+#elasticsearch data제외
+**/elasticsearch/data/**
