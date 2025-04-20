@@ -1,5 +1,7 @@
 package codepirate.tubelensbe.video.domain;
 
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.api.client.util.DateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -12,6 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -26,14 +29,17 @@ public class TrendingVideo {
     private String thumbnails;
 
     private String embedHtml ;
-    
-    private DateTime publishedAt ;
+
+    @Column(name = "published_at")
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssX", timezone = "UTC")
+    private OffsetDateTime publishedAt;
+
 
     @Column(length = 2000)
     private String description ;
-    
+
     private String channelTitle ;
-    
+
     private BigInteger viewCount ;
     
     private BigInteger likeCount ;
