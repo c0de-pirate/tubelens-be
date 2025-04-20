@@ -33,9 +33,9 @@ public class TrendingVideo {
     @Lob
     @Column(columnDefinition = "TEXT")
     private String description ;
-    
+
     private String channelTitle ;
-    
+
     private BigInteger viewCount ;
     
     private BigInteger likeCount ;
