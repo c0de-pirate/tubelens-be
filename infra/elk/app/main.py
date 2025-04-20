@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Request
-import openai
 import os
+os.environ["NLTK_DATA"] = "/usr/share/nltk_data"  # 이 줄 추가
 
-openai.api_key = os.getenv("CHATGPT_API_KEY")
+from fastapi import FastAPI, Request
+from rake_nltk import Rake
 
 app = FastAPI()
 
@@ -10,14 +10,13 @@ app = FastAPI()
 async def refine_title(request: Request):
     data = await request.json()
     title = data.get("title", "")
-    response = openai.ChatCompletion.create(
-        model="gpt-4o-mini",
-        messages=[{
-            "role": "user",
-            "content": f"Analyze the following Korean YouTube title and perform Preprocessing and Query Expansion so that it can be used for search, while maximally preserving the original meaning, within a length of 5 to 10 characters: {title}"
-        }],
-        max_tokens=50,
-        temperature=0.6
-    )
-    refined_title = response.choices[0].message.content.strip()
-    return {"refined_title": refined_title}
+    try:
+        r = Rake(language='kor')
+        r.extract_keywords_from_text(title)
+        ranked_phrases = r.get_ranked_phrases()
+        top_keywords = ranked_phrases[:3]
+        refined_title = ",".join(top_keywords)
+        return {"refined_title": refined_title}
+    except Exception as e:
+        print(f"Rake-NLTK error: {e}")
+        return {"error": "Rake-NLTK error", "details": str(e)}, 500

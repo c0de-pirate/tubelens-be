@@ -125,7 +125,7 @@ fabric.properties
 
 # docker infra ingore file list
 infra/elk/elasticsearch/data
-infra/elk/docker-compose.override.yml
+infra/elk/.env
 
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257
