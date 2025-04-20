@@ -11,4 +11,6 @@ import java.util.List;
 public interface TrendingVideoRepository extends JpaRepository<TrendingVideo, String> {
     @Override
     <S extends TrendingVideo> List<S> saveAll(Iterable<S> entities);
+
 }
+

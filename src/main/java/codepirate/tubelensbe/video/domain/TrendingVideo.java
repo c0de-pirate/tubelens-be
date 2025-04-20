@@ -1,5 +1,6 @@
 package codepirate.tubelensbe.video.domain;
 
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.api.client.util.DateTime;
 import jakarta.persistence.Column;
@@ -40,9 +41,9 @@ public class TrendingVideo {
     private String channelTitle ;
 
     private BigInteger viewCount ;
-
+    
     private BigInteger likeCount ;
-
+    
     private BigInteger commentCount ;
 
     @ElementCollection

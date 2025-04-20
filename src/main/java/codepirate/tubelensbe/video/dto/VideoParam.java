@@ -16,3 +16,4 @@ public class VideoParam {
     private String videoCategoryId;
     private Long maxResults;
 }
+

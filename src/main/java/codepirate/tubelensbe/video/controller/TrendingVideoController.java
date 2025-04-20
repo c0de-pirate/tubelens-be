@@ -8,6 +8,7 @@ import codepirate.tubelensbe.video.service.TrendingVideoService;
 import com.google.api.services.youtube.model.VideoListResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,6 +29,7 @@ public class TrendingVideoController {
     public TrendingVideoController(TrendingVideoService trendingVideoService, ApiService apiService) {
         this.trendingVideoService = trendingVideoService;
         this.apiService = apiService;
+
     }
 
     @Value("${youtube.api.key}")
@@ -48,3 +50,23 @@ public class TrendingVideoController {
         apiService.insertVideos(videoParam);
     }
 }
+
+    }
+  
+    @GetMapping("/videos")
+    @ResponseBody
+    public void videoInsert(
+            @RequestParam String part,
+            @RequestParam String chart,
+            @RequestParam String regionCode,
+            @RequestParam String videoCategoryId,
+            @RequestParam Long maxResults,
+            @RequestParam String key
+    )
+            throws IOException {
+        VideoParam videoParam = new VideoParam(part, chart, regionCode, videoCategoryId, maxResults, key);
+        log.info(String.valueOf(maxResults));
+        apiService.insertVideos(videoParam);
+    }
+}
+
