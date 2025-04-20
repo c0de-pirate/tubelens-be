@@ -49,24 +49,6 @@ public class TrendingVideoController {
         log.info(String.valueOf(maxResults));
         apiService.insertVideos(videoParam);
     }
-}
 
-    }
-  
-    @GetMapping("/videos")
-    @ResponseBody
-    public void videoInsert(
-            @RequestParam String part,
-            @RequestParam String chart,
-            @RequestParam String regionCode,
-            @RequestParam String videoCategoryId,
-            @RequestParam Long maxResults,
-            @RequestParam String key
-    )
-            throws IOException {
-        VideoParam videoParam = new VideoParam(part, chart, regionCode, videoCategoryId, maxResults, key);
-        log.info(String.valueOf(maxResults));
-        apiService.insertVideos(videoParam);
-    }
 }
 
