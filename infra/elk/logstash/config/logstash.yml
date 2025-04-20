@@ -1,6 +1,5 @@
 path.data: /var/lib/logstash
 path.logs: /var/log/logstash
-xpack.monitoring.enabled: false
-
-pipeline.workers: 4
 pipeline.batch.size: 125
+pipeline.workers: 4
+xpack.monitoring.enabled: false
