@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +29,7 @@ public class ApiService {
     public ApiService(TrendingVideoRepository trendingVideoRepository) {
         this.trendingVideoRepository = trendingVideoRepository;
     }
-
+  
     @Value("${youtube.api.key}")
     private String apiKey;
 
@@ -54,7 +53,7 @@ public class ApiService {
         video.set("regionCode", param.getRegionCode());
         video.set("videoCategoryId", param.getVideoCategoryId());
         video.set("maxResults", param.getMaxResults());
-        video.set("key", apiKey);
+        video.set("key", param.getKey());
 
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
@@ -76,13 +75,14 @@ public class ApiService {
             trendingVideo.setTitle(v.getSnippet().getTitle());
             trendingVideo.setThumbnails(v.getSnippet().getThumbnails().getMedium().getUrl());
             trendingVideo.setEmbedHtml(src);
+            trendingVideo.setPublishedAt(v.getSnippet().getPublishedAt());
             trendingVideo.setDescription(v.getSnippet().getDescription());
             trendingVideo.setChannelTitle(v.getSnippet().getChannelTitle());
             trendingVideo.setViewCount(v.getStatistics().getViewCount());
             trendingVideo.setLikeCount(v.getStatistics().getLikeCount());
             trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
             trendingVideo.setTags(v.getSnippet().getTags());
-
+          
             // DateTime을 OffsetDateTime으로 변환
             OffsetDateTime offsetDateTime = OffsetDateTime.parse(v.getSnippet().getPublishedAt().toString());
 
@@ -95,3 +95,4 @@ public class ApiService {
         trendingVideoRepository.saveAll(trendingVideoList);
     }
 }
+
