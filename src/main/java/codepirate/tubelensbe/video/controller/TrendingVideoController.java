@@ -42,10 +42,11 @@ public class TrendingVideoController {
             @RequestParam String chart,
             @RequestParam String regionCode,
             @RequestParam String videoCategoryId,
-            @RequestParam Long maxResults
+            @RequestParam Long maxResults,
+            @RequestParam String key
     )
             throws IOException {
-        VideoParam videoParam = new VideoParam(part, chart, regionCode, videoCategoryId, maxResults);
+        VideoParam videoParam = new VideoParam(part, chart, regionCode, videoCategoryId, maxResults, key);
         log.info(String.valueOf(maxResults));
         apiService.insertVideos(videoParam);
     }
