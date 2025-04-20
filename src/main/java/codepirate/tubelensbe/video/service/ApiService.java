@@ -29,6 +29,10 @@ public class ApiService {
     public ApiService(TrendingVideoRepository trendingVideoRepository) {
         this.trendingVideoRepository = trendingVideoRepository;
     }
+  
+    @Value("${youtube.api.key}")
+    private String apiKey;
+
 
     public void insertVideos(VideoParam param) throws IOException {
         log.info("service");
@@ -78,6 +82,12 @@ public class ApiService {
             trendingVideo.setLikeCount(v.getStatistics().getLikeCount());
             trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
             trendingVideo.setTags(v.getSnippet().getTags());
+          
+            // DateTime을 OffsetDateTime으로 변환
+            OffsetDateTime offsetDateTime = OffsetDateTime.parse(v.getSnippet().getPublishedAt().toString());
+
+            // publishedAt에 OffsetDateTime을 설정
+            trendingVideo.setPublishedAt(offsetDateTime);
 
             trendingVideoList.add(trendingVideo);
         }
@@ -85,3 +95,4 @@ public class ApiService {
         trendingVideoRepository.saveAll(trendingVideoList);
     }
 }
+
