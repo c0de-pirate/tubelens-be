@@ -33,7 +33,7 @@ public class TrendingVideoController {
     }
 
     @Value("${youtube.api.key}")
-    private String apiKey;
+    private String youtubeApiKey;
 
     @GetMapping("/videos")
     @ResponseBody
@@ -50,5 +50,9 @@ public class TrendingVideoController {
         apiService.insertVideos(videoParam);
     }
 
+    @GetMapping("/api")
+    public void apitest() {
+        log.info(youtubeApiKey);
+    }
 }
 
