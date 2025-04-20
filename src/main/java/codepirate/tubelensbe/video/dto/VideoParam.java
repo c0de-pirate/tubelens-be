@@ -15,5 +15,6 @@ public class VideoParam {
     private String regionCode;
     private String videoCategoryId;
     private Long maxResults;
+    private String key;
 }
 
