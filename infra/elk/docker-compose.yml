@@ -46,7 +46,7 @@ services:
       - elk-network
     volumes:
       - ./logstash/config:/usr/share/logstash/config
-      - ./logstash_data:/var/lib/logstash
+      - ./logstash_data:/var/lib/logstashg
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./mysql-connector-j-9.1.0.jar:/usr/share/logstash/tools/mysql-connector-j-9.1.0.jar
     command: "logstash -f /usr/share/logstash/pipeline/logstash.conf"

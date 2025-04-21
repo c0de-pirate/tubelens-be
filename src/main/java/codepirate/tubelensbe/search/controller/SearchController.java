@@ -17,7 +17,8 @@ class SearchController {
     private final ElasticSearchService elasticSearchService;
 
     @GetMapping("/search")
-    public List<VideoSearch> search(@RequestParam String keyword) throws IOException {
+    public List<String> search(@RequestParam String keyword) throws IOException {
         return elasticSearchService.searchVideos(keyword);
     }
+
 }

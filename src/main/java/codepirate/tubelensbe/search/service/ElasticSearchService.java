@@ -15,7 +15,8 @@ public class ElasticSearchService {
 
     private final ElasticSearchRepository elasticSearchRepository;
 
-    public List<VideoSearch> searchVideos(String keyword) throws IOException {
-        return elasticSearchRepository.searchByTitle(keyword);
+    public List<String> searchVideos(String keyword) throws IOException {
+        return elasticSearchRepository.search(keyword);
     }
+
 }
