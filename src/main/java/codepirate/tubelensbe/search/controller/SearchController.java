@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-class SearchController {
+public class SearchController {
 
     private final ElasticSearchService elasticSearchService;
 

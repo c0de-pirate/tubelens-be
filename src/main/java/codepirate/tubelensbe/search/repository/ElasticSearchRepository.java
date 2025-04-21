@@ -1,10 +1,10 @@
 package codepirate.tubelensbe.search.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import codepirate.tubelensbe.search.domain.VideoSearch;
 
@@ -13,6 +13,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import org.springframework.stereotype.Repository;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Slf4j
 @Repository
 @RequiredArgsConstructor
 public class ElasticSearchRepository {
@@ -41,10 +51,15 @@ public class ElasticSearchRepository {
                 )
         );
 
+        log.info("Elasticsearch Query: {}", searchRequest);
+
         SearchResponse<VideoSearch> searchResponse = elasticsearchClient.search(searchRequest, VideoSearch.class);
+
+        log.info("Elasticsearch Response: {}", searchResponse);
 
         return searchResponse.hits().hits().stream()
                 .map(hit -> hit.source().getTitle())
                 .collect(Collectors.toList());
     }
+
 }
