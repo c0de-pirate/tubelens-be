@@ -225,5 +225,7 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
+# application-dev.yml 제외
+src/main/resources/application-dev.yaml
 
 
