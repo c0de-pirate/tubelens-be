@@ -1,19 +1,17 @@
-version: '3.8'
-
 services:
   elasticsearch:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        ELK_VERSION: ${ELK_VERSION}  # .env에서 읽은 환경변수 전달
+        ELK_VERSION: ${ELK_VERSION}
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=${ES_JAVA_OPTS}
       - xpack.security.enabled=false
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTICSEARCH_PLUGINS=analysis-nori  # 플러그인 설치 명시
+      - ELASTICSEARCH_PLUGINS=analysis-nori
     volumes:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
       - ./elasticsearch/data:/usr/share/elasticsearch/data
@@ -29,6 +27,7 @@ services:
       retries: 5
 
   logstash:
+    user: root
     build:
       context: .
       dockerfile: Dockerfile.logstash
@@ -40,6 +39,7 @@ services:
       - elasticsearch
     environment:
       - XPACK_MONITORING_ENABLED=false
+      - CHATGPT_API_KEY=${CHATGPT_API_KEY}
     ports:
       - "${LOGSTASH_PORT}:5000"
     networks:
@@ -49,6 +49,7 @@ services:
       - ./logstash_data:/var/lib/logstash
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./mysql-connector-j-9.1.0.jar:/usr/share/logstash/tools/mysql-connector-j-9.1.0.jar
+      - logstash_data:/var/lib/logstash # <-- 최종적으로 이렇게 설정
     command: "logstash -f /usr/share/logstash/pipeline/logstash.conf"
 
   kibana:
@@ -63,6 +64,21 @@ services:
     environment:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
+  python_api:
+    build:
+      context: ./app
+    container_name: python_api
+    environment:
+      - CHATGPT_API_KEY=${CHATGPT_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - elk-network
+
 networks:
   elk-network:
     driver: bridge
+
+volumes:
+  esdata:
+  logstash_data: # <-- 이렇게 정의하면 elk_logstash_data 로 생성됨
