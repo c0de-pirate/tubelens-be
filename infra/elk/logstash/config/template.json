@@ -1,0 +1,38 @@
+{
+  "index_patterns": ["tubelens_videos*"],
+  "settings": {
+    "analysis": {
+      "tokenizer": {
+        "nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed"
+        }
+      },
+      "analyzer": {
+        "korean_analyzer": {
+          "type": "custom",
+          "tokenizer": "nori_tokenizer",
+          "filter": ["lowercase"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "korean_analyzer"
+      },
+      "viewCount": {
+        "type": "integer"
+      },
+      "publishedAt": {
+        "type": "date"
+      },
+      "thumbnails": {
+        "type": "keyword"
+      }
+    }
+  }
+}
+
