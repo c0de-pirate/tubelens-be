@@ -226,4 +226,5 @@ gradle-app.setting
 # application-dev.yml 제외
 src/main/resources/application-dev.yaml
 
-
+#elasticsearch data제외
+**/elasticsearch/data/**
