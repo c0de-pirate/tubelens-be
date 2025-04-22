@@ -1,18 +1,22 @@
 package codepirate.tubelensbe.search.domain;
 
 
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VideoSearch {
+    @Field(type = FieldType.Text, analyzer = "korean_analyzer")
     private String title;
     private String thumbnails;
     @JsonProperty("channel_title")
