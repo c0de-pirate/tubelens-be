@@ -1,0 +1,5 @@
+# 초기 total heapsize
+-Xms1g
+
+# 최대 heap size
+-Xmx1g

@@ -123,6 +123,10 @@ fabric.properties
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
 
+# docker infra ingore file list
+infra/elk/elasticsearch/data
+infra/elk/.env
+
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257
 .idea/$CACHE_FILE$
@@ -220,3 +224,8 @@ gradle-app.setting
 ### Gradle Patch ###
 # Java heap dump
 *.hprof
+
+# application-dev.yml 제외
+src/main/resources/application-dev.yaml
+
+

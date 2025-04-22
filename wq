@@ -1,0 +1,19 @@
+[33mcommit 83692779c46ce4cef1d6abd01b4e4522f4a52e31[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature/vector-similarity[m[33m)[m
+Author: Atriel1999 <fortuny1999@gmail.com>
+Date:   Thu Apr 17 18:40:58 2025 +0900
+
+    🐛Fix Bug: Elasticsearch data 폴더 .gitignore 추가 및 해당폴더 캐시 제거
+
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 859be35..5e3b209 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -123,6 +123,8 @@[m [mfabric.properties[m
+ .idea/**/markdown-navigator-enh.xml[m
+ .idea/**/markdown-navigator/[m
+ [m
+[32m+[m[32m.infra/elk/elasticsearch/data[m
+[32m+[m
+ # Cache file creation bug[m
+ # See https://youtrack.jetbrains.com/issue/JBR-2257[m
+ .idea/$CACHE_FILE$[m
