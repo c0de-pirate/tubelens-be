@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import codepirate.tubelensbe.search.domain.VideoSearch;
+import codepirate.tubelensbe.search.dto.VideoResult;
 import codepirate.tubelensbe.search.repository.VideoSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class VideoSearchService {
 
     private final VideoSearchRepository videoSearchRepository;
 
-    public List<String> searchByKeyword(String prefix) {
-        return videoSearchRepository.searchByKeyword(prefix);
+    public List<VideoResult> searchByKeyword(String keyword) {
+        return videoSearchRepository.searchByKeyword(keyword);
     }
 }
