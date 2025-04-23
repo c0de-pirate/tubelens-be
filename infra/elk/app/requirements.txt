@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+krwordrank
+sentence-transformers
+torch
