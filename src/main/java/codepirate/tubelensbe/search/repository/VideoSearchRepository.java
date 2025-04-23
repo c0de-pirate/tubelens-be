@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import codepirate.tubelensbe.search.domain.VideoSearch;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,14 +26,25 @@ public class VideoSearchRepository {
 
     private final ElasticsearchClient elasticsearchClient;
 
-    public List<String> searchByPrefixSortedByViewCount(String prefix) {
+    public List<String> searchByKeyword(String keyword) {
         try {
+            // 검색 요청 생성
             SearchRequest searchRequest = SearchRequest.of(s -> s
-                    .index("tubelens_video_v4")
+                    .index("tubelens_video")
                     .query(q -> q
-                            .prefix(p -> p
-                                    .field("title.keyword")  // title.keyword 사용
-                                    .value(prefix)
+                            .bool(b -> b
+                                    .should(sh -> sh
+                                            .match(m -> m
+                                                    .field("title.ko")
+                                                    .query(keyword)
+                                            )
+                                    )
+                                    .should(sh -> sh
+                                            .match(m -> m
+                                                    .field("title.en")
+                                                    .query(keyword)
+                                            )
+                                    )
                             )
                     )
                     .sort(sort -> sort
@@ -43,15 +55,21 @@ public class VideoSearchRepository {
                     )
             );
 
-
+            // 검색 실행
             SearchResponse<VideoSearch> response = elasticsearchClient.search(searchRequest, VideoSearch.class);
 
-            return response.hits().hits().stream()
-                    .map(Hit::source)
-                    .map(VideoSearch::getTitle)
-                    .collect(Collectors.toList());
+            // 검색 결과에서 제목을 추출
+            List<String> titles = new ArrayList<>();
+            for (Hit<VideoSearch> hit : response.hits().hits()) {
+                VideoSearch videoSearch = hit.source();
+                if (videoSearch != null && videoSearch.getTitle() != null) {
+                    titles.add(videoSearch.getTitle());
+                }
+            }
+
+            return titles;
         } catch (IOException e) {
-            log.error("Elasticsearch 검색 중 오류 발생: {}", e.getMessage());
+            log.error("Elasticsearch 검색 중 오류 발생: {}", e.getMessage(), e);
             return List.of();
         }
     }
