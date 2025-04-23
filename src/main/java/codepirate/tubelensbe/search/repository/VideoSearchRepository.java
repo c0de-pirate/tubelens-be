@@ -1,6 +1,7 @@
 package codepirate.tubelensbe.search.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -27,21 +28,21 @@ public class VideoSearchRepository {
     public List<String> searchByPrefixSortedByViewCount(String prefix) {
         try {
             SearchRequest searchRequest = SearchRequest.of(s -> s
-                    .index("tubelens_videos")
+                    .index("tubelens_video_v4")
                     .query(q -> q
                             .prefix(p -> p
-                                    .field("title.prefix")
+                                    .field("title.keyword")  // title.keyword 사용
                                     .value(prefix)
-
                             )
                     )
                     .sort(sort -> sort
                             .field(f -> f
-                                    .field("view_count")
-                                    .order(Desc)
+                                    .field("viewCount")
+                                    .order(SortOrder.Desc)
                             )
                     )
             );
+
 
             SearchResponse<VideoSearch> response = elasticsearchClient.search(searchRequest, VideoSearch.class);
 
