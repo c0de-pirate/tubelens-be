@@ -2,16 +2,11 @@ package codepirate.tubelensbe.video.service;
 
 import codepirate.tubelensbe.video.domain.TrendingVideo;
 import codepirate.tubelensbe.video.dto.VideoParam;
-import codepirate.tubelensbe.video.repository.TrendingVideoRepository;
 import codepirate.tubelensbe.video.repository.TrendingVideoRepositoryCustom;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.DateTime;
-import com.google.api.client.util.Value;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.SearchListResponse;
-import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import org.slf4j.Logger;
@@ -19,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +30,7 @@ public class ApiService {
 
     public void insertVideos(VideoParam param) throws IOException {
 
-//         JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
+        // JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
         JsonFactory jsonFactory = new JacksonFactory();
 
         // YouTube 객체를 빌드하여 API에 접근할 수 있는 YouTube 클라이언트 생성
