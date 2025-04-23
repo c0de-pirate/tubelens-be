@@ -16,7 +16,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VideoSearch {
-    @Field(type = FieldType.Text, analyzer = "korean_analyzer")
     private String title;
     private String thumbnails;
     @JsonProperty("channel_title")
