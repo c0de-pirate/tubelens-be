@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import codepirate.tubelensbe.search.domain.VideoSearch;
 import codepirate.tubelensbe.search.repository.VideoSearchRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,17 +18,12 @@ import java.util.stream.Collectors;
 import static co.elastic.clients.elasticsearch._types.SortOrder.Desc;
 
 @Service
+@RequiredArgsConstructor
 public class VideoSearchService {
 
     private final VideoSearchRepository videoSearchRepository;
 
-    @Autowired
-    public VideoSearchService(VideoSearchRepository videoSearchRepository) {
-        this.videoSearchRepository = videoSearchRepository;
-    }
-
-    public List<String> searchByPrefixSortedByViewCount(String prefix) {
-        return videoSearchRepository.searchByPrefixSortedByViewCount(prefix);
+    public List<String> searchByKeyword(String prefix) {
+        return videoSearchRepository.searchByKeyword(prefix);
     }
 }
-
