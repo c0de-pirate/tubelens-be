@@ -1,5 +1,6 @@
 package codepirate.tubelensbe.search.controller;
 
+import codepirate.tubelensbe.search.dto.VideoResult;
 import codepirate.tubelensbe.search.service.VideoSearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,8 @@ public class VideoSearchController {
     private final VideoSearchService videoSearchService;
 
     @GetMapping("/search")
-    public ResponseEntity<List<String>> searchVideos(@RequestParam String prefix) {
-        List<String> results = videoSearchService.searchByKeyword(prefix);
+    public ResponseEntity<List<VideoResult>> searchVideos(@RequestParam String keyword) {
+        List<VideoResult> results = videoSearchService.searchByKeyword(keyword);
         return ResponseEntity.ok(results);
     }
 }
