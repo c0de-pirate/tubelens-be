@@ -18,7 +18,8 @@ public class SearchSuggestService {
         this.elasticsearchClient = elasticsearchClient;
     }
 
-    public List<SuggestionGroup> suggest(String input) throws IOException {
+    public List<List<String>> suggest(String input) throws IOException {
+        // Elasticsearch 쿼리 실행
         SearchResponse<Object> response = elasticsearchClient.search(s -> s
                         .index("tubelens_video")
                         .query(q -> q
@@ -31,20 +32,38 @@ public class SearchSuggestService {
                 Object.class
         );
 
-        return response.hits().hits().stream()
-                .map(hit -> {
-                    Map<String, Object> source = (Map<String, Object>) hit.source();
-                    Object suggestObj = source.get("suggest");
+        // 키워드 빈도수를 추출
+        Map<String, Long> keywordFrequency = new HashMap<>();
 
-                    if (suggestObj instanceof Map suggestMap) {
-                        Object inputObj = suggestMap.get("input");
-                        if (inputObj instanceof List inputList) {
-                            return new SuggestionGroup((List<String>) inputList);
-                        }
-                    }
-                    return null;
-                })
-                .filter(Objects::nonNull)
+        // 응답에서 키워드 추출 및 빈도수 계산
+        response.hits().hits().forEach(hit -> {
+            Map<String, Object> source = (Map<String, Object>) hit.source();
+            Object suggestObj = source.get("suggest");
+
+            if (suggestObj instanceof Map suggestMap) {
+                Object inputObj = suggestMap.get("input");
+                if (inputObj instanceof List inputList) {
+                    inputList.forEach(keyword -> {
+                        keywordFrequency.put((String) keyword, keywordFrequency.getOrDefault(keyword, 0L) + 1);
+                    });
+                }
+            }
+        });
+
+        // 빈도수 높은 순으로 정렬하여 추천 리스트 생성
+        List<Map.Entry<String, Long>> sortedKeywords = keywordFrequency.entrySet().stream()
+                .sorted((entry1, entry2) -> entry2.getValue().compareTo(entry1.getValue())) // 빈도수 내림차순 정렬
                 .collect(Collectors.toList());
+
+        // 내가 입력한 키워드와 빈도수가 높은 키워드 리스트 결합
+        List<List<String>> suggestionGroups = new ArrayList<>();
+
+        // 입력한 키워드를 고정하고, 빈도수가 높은 키워드를 조합
+        sortedKeywords.stream()
+                .filter(entry -> !entry.getKey().equals(input))  // 입력한 키워드는 제외
+                .limit(10)  // 최대 10개의 키워드만 추가
+                .forEach(entry -> suggestionGroups.add(Arrays.asList(input, entry.getKey())));
+
+        return suggestionGroups;
     }
 }
