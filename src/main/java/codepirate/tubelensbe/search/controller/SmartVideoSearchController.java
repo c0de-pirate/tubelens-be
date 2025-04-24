@@ -21,6 +21,7 @@ public class SmartVideoSearchController {
 
     @GetMapping("/smart/search")
     public ResponseEntity<List<VideoResult>> unifiedSearch(
+            @RequestParam String input,
             @RequestParam List<String> keywords,
             @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) {
 
@@ -28,16 +29,13 @@ public class SmartVideoSearchController {
             return ResponseEntity.badRequest().body(List.of());
         }
 
-        // 1. 일반 검색 수행 (첫 번째 키워드 기반)
-        String primaryKeyword = keywords.get(0);
-        List<VideoResult> fuzzyMatches = videoSearchService.searchByKeyword(primaryKeyword, fuzzinessLevel);
+        // 1. 모든 키워드가 제목에 포함된 결과
+        List<VideoResult> exactMatches = videoSearchService.searchByAllKeywordsInTitle(keywords);
 
-        // 2. fuzzyMatches 중 정확히 모든 키워드를 포함한 결과만 필터링
-        List<VideoResult> exactMatches = fuzzyMatches.stream()
-                .filter(video -> keywords.stream().allMatch(k -> video.getTitle().contains(k)))
-                .collect(Collectors.toList());
+        // 2. 사용자가 입력한 키워드로 일반 검색
+        List<VideoResult> fuzzyMatches = videoSearchService.searchByKeyword(input, fuzzinessLevel);
 
-        // 3. 중복 제거 및 정렬
+        // 3. 중복 제거 후 정렬: exact → fuzzy
         Set<String> seenTitles = new HashSet<>();
         List<VideoResult> combinedResults = new ArrayList<>();
 
