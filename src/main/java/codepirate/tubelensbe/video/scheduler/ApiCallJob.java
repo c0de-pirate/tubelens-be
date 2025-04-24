@@ -48,7 +48,6 @@ public class ApiCallJob implements Job {
             );
 
             try {
-                log.info("id: " + id);
                 apiService.insertVideos(videoParam);
             } catch (HttpClientErrorException e) {
                 if (e.getStatusCode() == HttpStatus.BAD_REQUEST) {
