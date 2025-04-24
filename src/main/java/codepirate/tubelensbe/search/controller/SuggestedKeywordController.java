@@ -26,7 +26,8 @@ public class SuggestedKeywordController {
             @RequestParam String keyword,
             @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) {
 
-        List<VideoSearchResult> searchResults = videoSearchRepository.searchByKeyword(keyword, fuzzinessLevel);
+        // 접두사 기반 검색을 위한 쿼리 적용
+        List<VideoSearchResult> searchResults = videoSearchRepository.searchByPrefix(keyword);
 
         List<VideoSearchRepository.KeywordGroup> matched = new ArrayList<>();
         List<VideoSearchRepository.KeywordGroup> unmatched = new ArrayList<>();
@@ -38,8 +39,9 @@ public class SuggestedKeywordController {
                     String title = result.getTitle();
                     List<String> keywords = List.of(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
                             .stream()
-                            .filter(token -> token.length() >= 2)
+                            .filter(token -> token.length() >= 2 && token.length() <= 4)
                             .distinct()
+                            .limit(2)
                             .collect(Collectors.toList());
                     VideoSearchRepository.KeywordGroup group = new VideoSearchRepository.KeywordGroup(title, keywords);
                     if (keywords.contains(keyword)) {
