@@ -10,11 +10,9 @@ import org.springframework.stereotype.Repository;
 import codepirate.tubelensbe.search.domain.SearchVideo;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -24,10 +22,8 @@ public class VideoSearchRepository {
 
     private final ElasticsearchClient elasticsearchClient;
 
-    // 단일 키워드에 대한 일반 검색 (정확 + 유사 포함)
     public List<VideoSearchResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         try {
-            // 정확히 포함된 제목 검색 (match_phrase)
             SearchResponse<SearchVideo> exactMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q.bool(b -> b
@@ -38,7 +34,6 @@ public class VideoSearchRepository {
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
                     SearchVideo.class);
 
-            // 유사 검색 (fuzzy match)
             SearchResponse<SearchVideo> fuzzyMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q.bool(b -> b
@@ -49,7 +44,6 @@ public class VideoSearchRepository {
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
                     SearchVideo.class);
 
-            // 결과 중복 제거 및 병합
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
 
@@ -75,7 +69,6 @@ public class VideoSearchRepository {
         }
     }
 
-    // 여러 키워드가 모두 제목에 포함된 경우
     public List<VideoSearchResult> searchByAllKeywordsInTitle(List<String> keywords) {
         try {
             SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
@@ -110,5 +103,42 @@ public class VideoSearchRepository {
             log.error("모든 키워드 포함 검색 중 오류 발생: {}", e.getMessage(), e);
             return List.of();
         }
+    }
+
+    public static class KeywordGroup {
+        public String title;
+        public List<String> keywords;
+
+        public KeywordGroup(String title, List<String> keywords) {
+            this.title = title;
+            this.keywords = keywords;
+        }
+    }
+
+    // title별 키워드 그룹 객체 반환
+    public List<KeywordGroup> extractKeywordGroupsFromTitles(List<VideoSearchResult> searchResults) {
+        List<KeywordGroup> keywordGroups = new ArrayList<>();
+
+        for (VideoSearchResult result : searchResults) {
+            String title = result.getTitle();
+            if (title == null || title.isBlank()) continue;
+
+            String[] tokens = title.split("\\s+|[^가-힣a-zA-Z0-9]");
+            List<String> keywords = Arrays.stream(tokens)
+                    .filter(token -> token.length() >= 2)
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            if (!keywords.isEmpty()) {
+                keywordGroups.add(new KeywordGroup(title, keywords));
+            }
+        }
+
+        return keywordGroups;
+    }
+
+    public List<KeywordGroup> suggestKeywordGroupsFromSearch(String keyword, String fuzzinessLevel) {
+        List<VideoSearchResult> results = searchByKeyword(keyword, fuzzinessLevel);
+        return extractKeywordGroupsFromTitles(results);
     }
 }

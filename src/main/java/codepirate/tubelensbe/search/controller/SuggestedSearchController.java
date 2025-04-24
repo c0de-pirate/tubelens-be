@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.*;
 
 @RestController
-@RequestMapping("/youtube")
+@RequestMapping
 @RequiredArgsConstructor
 public class SuggestedSearchController {
 
     private final VideoSearchService videoSearchService;
 
-    @GetMapping("/search/suggested")
+    @GetMapping("/suggested")
     public ResponseEntity<List<VideoSearchResult>> unifiedSearch(
             @RequestParam String input,
             @RequestParam List<String> keywords,
