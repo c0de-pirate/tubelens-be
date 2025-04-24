@@ -1,6 +1,6 @@
 package codepirate.tubelensbe.suggest.controller;
 
-import codepirate.tubelensbe.suggest.service.SearchSuggestService;
+import codepirate.tubelensbe.suggest.service.KeywordSuggestService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,16 +11,16 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/youtube")
-public class SearchSuggestController {
+public class KeywordSuggestController {
 
-    private final SearchSuggestService searchService;
+    private final KeywordSuggestService searchService;
 
-    public SearchSuggestController(SearchSuggestService searchSuggestService, SearchSuggestService searchService) {
+    public KeywordSuggestController(KeywordSuggestService keywordSuggestService, KeywordSuggestService searchService) {
 
         this.searchService = searchService;
     }
 
-    @GetMapping("/suggest")
+    @GetMapping("/suggestions")
     public List<List<String>> getSuggestions(@RequestParam String keyword) throws IOException {
         return searchService.suggest(keyword);
     }
