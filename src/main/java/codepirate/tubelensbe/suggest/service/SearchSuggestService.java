@@ -2,6 +2,7 @@ package codepirate.tubelensbe.suggest.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import codepirate.tubelensbe.suggest.dto.SuggestionGroup;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
