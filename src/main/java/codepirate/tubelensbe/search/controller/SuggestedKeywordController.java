@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,10 +28,13 @@ public class SuggestedKeywordController {
 
         List<VideoSearchResult> searchResults = videoSearchRepository.searchByKeyword(keyword, fuzzinessLevel);
 
+        List<VideoSearchRepository.KeywordGroup> matched = new ArrayList<>();
+        List<VideoSearchRepository.KeywordGroup> unmatched = new ArrayList<>();
+
         // viewCount 내림차순 정렬 후 키워드 그룹화 (키워드 최대 3개 제한)
-        List<VideoSearchRepository.KeywordGroup> keywordGroups = searchResults.stream()
+        searchResults.stream()
                 .sorted(Comparator.comparingLong(VideoSearchResult::getViewCount).reversed())
-                .map(result -> {
+                .forEach(result -> {
                     String title = result.getTitle();
                     List<String> keywords = List.of(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
                             .stream()
@@ -38,10 +42,18 @@ public class SuggestedKeywordController {
                             .distinct()
                             .limit(3)
                             .collect(Collectors.toList());
-                    return new VideoSearchRepository.KeywordGroup(title, keywords);
-                })
-                .collect(Collectors.toList());
+                    VideoSearchRepository.KeywordGroup group = new VideoSearchRepository.KeywordGroup(title, keywords);
+                    if (keywords.contains(keyword)) {
+                        matched.add(group);
+                    } else {
+                        unmatched.add(group);
+                    }
+                });
 
-        return ResponseEntity.ok(keywordGroups);
+        List<VideoSearchRepository.KeywordGroup> combined = new ArrayList<>();
+        combined.addAll(matched);
+        combined.addAll(unmatched);
+
+        return ResponseEntity.ok(combined);
     }
 }
