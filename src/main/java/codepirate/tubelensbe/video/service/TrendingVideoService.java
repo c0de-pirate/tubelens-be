@@ -1,6 +1,7 @@
 package codepirate.tubelensbe.video.service;
 
 import codepirate.tubelensbe.video.controller.TrendingVideoController;
+import codepirate.tubelensbe.video.document.ESVideo;
 import codepirate.tubelensbe.video.repository.TrendingVideoESRepository;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -29,7 +30,7 @@ public class TrendingVideoService {
     @Value("${youtube.api.key}")
     private String youtubeApiKey;
 
-    public void recommVideos(List<String> id) throws IOException {
+    public List<ESVideo> recommVideos(List<String> id) throws IOException {
         //제목 추출 후 repository로
         JsonFactory jsonFactory = new JacksonFactory();
 
@@ -47,6 +48,6 @@ public class TrendingVideoService {
 
         VideoListResponse videoListResponse = video.execute();
         String videoid = videoListResponse.getItems().get(0).getId();
-        trendingVideoESRepository.recommendVideosByTitleVectors(videoid);
+        return trendingVideoESRepository.recommendVideosByTitleVectors(videoid);
     }
 }

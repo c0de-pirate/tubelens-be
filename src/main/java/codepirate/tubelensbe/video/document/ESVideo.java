@@ -37,17 +37,18 @@ public class ESVideo {
     private String channelTitle;
 
     @Field(type = FieldType.Keyword, name = "viewCount")
-    private String viewCount;
+    private Long viewCount;
 
     @Field(type = FieldType.Keyword, name = "likeCount")
-    private String likeCount;
+    private Long likeCount;
+
     @Field(type = FieldType.Keyword, name = "commentCount")
-    private String commentCount;
+    private Long commentCount;
 
     @Field(type = FieldType.Keyword, name = "updated_at")
     private String updated_at;
 
     @Field(type = FieldType.Dense_Vector, dims = 768)
-    private float[] vector;
+    private float[] embedding;
 
 }
