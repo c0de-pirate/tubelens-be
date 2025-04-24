@@ -2,15 +2,12 @@ package codepirate.tubelensbe.search.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import codepirate.tubelensbe.search.dto.VideoResult;
+import codepirate.tubelensbe.search.dto.VideoSearchResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
-import codepirate.tubelensbe.search.domain.VideoSearch;
+import codepirate.tubelensbe.search.domain.SearchVideo;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,7 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -29,10 +25,10 @@ public class VideoSearchRepository {
     private final ElasticsearchClient elasticsearchClient;
 
     // 단일 키워드에 대한 일반 검색 (정확 + 유사 포함)
-    public List<VideoResult> searchByKeyword(String keyword, String fuzzinessLevel) {
+    public List<VideoSearchResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         try {
             // 정확히 포함된 제목 검색 (match_phrase)
-            SearchResponse<VideoSearch> exactMatchResponse = elasticsearchClient.search(s -> s
+            SearchResponse<SearchVideo> exactMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q.bool(b -> b
                                     .should(sh -> sh.matchPhrase(mp -> mp.field("title.ko").query(keyword)))
@@ -40,10 +36,10 @@ public class VideoSearchRepository {
                                     .minimumShouldMatch("1")
                             ))
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    VideoSearch.class);
+                    SearchVideo.class);
 
             // 유사 검색 (fuzzy match)
-            SearchResponse<VideoSearch> fuzzyMatchResponse = elasticsearchClient.search(s -> s
+            SearchResponse<SearchVideo> fuzzyMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q.bool(b -> b
                                     .should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel)))
@@ -51,15 +47,15 @@ public class VideoSearchRepository {
                                     .minimumShouldMatch("1")
                             ))
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    VideoSearch.class);
+                    SearchVideo.class);
 
             // 결과 중복 제거 및 병합
             Set<String> seenTitles = new HashSet<>();
-            List<VideoResult> results = new ArrayList<>();
+            List<VideoSearchResult> results = new ArrayList<>();
 
-            Consumer<VideoSearch> addIfNotDuplicate = v -> {
+            Consumer<SearchVideo> addIfNotDuplicate = v -> {
                 if (v != null && v.getTitle() != null && seenTitles.add(v.getTitle())) {
-                    VideoResult result = new VideoResult();
+                    VideoSearchResult result = new VideoSearchResult();
                     result.setTitle(v.getTitle());
                     result.setChannelTitle(v.getChannelTitle());
                     result.setThumbnails(v.getThumbnails());
@@ -80,9 +76,9 @@ public class VideoSearchRepository {
     }
 
     // 여러 키워드가 모두 제목에 포함된 경우
-    public List<VideoResult> searchByAllKeywordsInTitle(List<String> keywords) {
+    public List<VideoSearchResult> searchByAllKeywordsInTitle(List<String> keywords) {
         try {
-            SearchResponse<VideoSearch> response = elasticsearchClient.search(s -> s
+            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q.bool(b -> {
                                 for (String keyword : keywords) {
@@ -91,15 +87,15 @@ public class VideoSearchRepository {
                                 return b;
                             }))
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    VideoSearch.class);
+                    SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
-            List<VideoResult> results = new ArrayList<>();
+            List<VideoSearchResult> results = new ArrayList<>();
 
             for (var hit : response.hits().hits()) {
-                VideoSearch v = hit.source();
+                SearchVideo v = hit.source();
                 if (v != null && v.getTitle() != null && seenTitles.add(v.getTitle())) {
-                    VideoResult result = new VideoResult();
+                    VideoSearchResult result = new VideoSearchResult();
                     result.setTitle(v.getTitle());
                     result.setChannelTitle(v.getChannelTitle());
                     result.setThumbnails(v.getThumbnails());

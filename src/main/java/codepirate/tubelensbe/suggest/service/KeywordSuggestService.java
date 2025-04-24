@@ -2,7 +2,6 @@ package codepirate.tubelensbe.suggest.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import codepirate.tubelensbe.suggest.dto.SuggestionGroup;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -10,11 +9,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class SearchSuggestService {
+public class KeywordSuggestService {
 
     private final ElasticsearchClient elasticsearchClient;
 
-    public SearchSuggestService(ElasticsearchClient elasticsearchClient) {
+    public KeywordSuggestService(ElasticsearchClient elasticsearchClient) {
         this.elasticsearchClient = elasticsearchClient;
     }
 

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class VideoSearch {
+public class SearchVideo {
     private String title;
     private String thumbnails;
     @JsonProperty("channel_title")

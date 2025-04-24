@@ -2,12 +2,12 @@ package codepirate.tubelensbe.suggest.dto;
 
 import java.util.List;
 
-public class SuggestionGroup {
+public class SuggestedKeywords {
 
     private List<String> keywords;
     private Long frequency;
 
-    public SuggestionGroup(List<String> keywords, Long frequency) {
+    public SuggestedKeywords(List<String> keywords, Long frequency) {
         this.keywords = keywords;
         this.frequency = frequency;
     }
@@ -30,7 +30,7 @@ public class SuggestionGroup {
 
     @Override
     public String toString() {
-        return "SuggestionGroup{" +
+        return "SuggestedKeywords{" +
                 "keywords=" + keywords +
                 ", frequency=" + frequency +
                 '}';

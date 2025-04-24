@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class VideoResult {
+public class VideoSearchResult {
     private String title;
     private String channelTitle;
     private String thumbnails;
