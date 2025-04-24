@@ -16,4 +16,8 @@ public class VideoSearchService {
     public List<VideoResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         return videoSearchRepository.searchByKeyword(keyword, fuzzinessLevel);
     }
+
+    public List<VideoResult> searchByAllKeywordsInTitle(List<String> keywords) {
+        return videoSearchRepository.searchByAllKeywordsInTitle(keywords);
+    }
 }

@@ -21,7 +21,7 @@ public class SearchSuggestController {
     }
 
     @GetMapping("/suggest")
-    public List<List<String>> getSuggestions(@RequestParam String keyword) throws IOException {
+    public List<String> getSuggestions(@RequestParam String keyword) throws IOException {
         return searchService.suggest(keyword);
     }
 }

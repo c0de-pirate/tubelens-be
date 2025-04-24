@@ -31,7 +31,6 @@ public class VideoSearchRepository {
 
     public List<VideoResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         try {
-            // 1. 정확히 포함된 제목 (match_phrase)
             SearchResponse<VideoSearch> exactMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q
@@ -45,7 +44,6 @@ public class VideoSearchRepository {
                     VideoSearch.class
             );
 
-            // 2. 유사어 검색 (fuzzy match) - fuzzinessLevel 파라미터로 조정
             SearchResponse<VideoSearch> fuzzyMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q
@@ -59,7 +57,6 @@ public class VideoSearchRepository {
                     VideoSearch.class
             );
 
-            // 3. 결과 합치기 (정확 매칭 + 유사 매칭 중복 제거)
             Set<String> seenTitles = new HashSet<>();
             List<VideoResult> results = new ArrayList<>();
 
@@ -81,6 +78,43 @@ public class VideoSearchRepository {
 
         } catch (IOException e) {
             log.error("Elasticsearch 검색 중 오류 발생: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    public List<VideoResult> searchByAllKeywordsInTitle(List<String> keywords) {
+        try {
+            SearchResponse<VideoSearch> response = elasticsearchClient.search(s -> s
+                            .index("tubelens_video")
+                            .query(q -> q.bool(b -> {
+                                for (String keyword : keywords) {
+                                    b.must(m -> m.matchPhrase(mp -> mp.field("title.ko").query(keyword)));
+                                }
+                                return b;
+                            }))
+                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
+                    VideoSearch.class
+            );
+
+            Set<String> seenTitles = new HashSet<>();
+            List<VideoResult> results = new ArrayList<>();
+
+            for (var hit : response.hits().hits()) {
+                VideoSearch v = hit.source();
+                if (v != null && v.getTitle() != null && seenTitles.add(v.getTitle())) {
+                    VideoResult result = new VideoResult();
+                    result.setTitle(v.getTitle());
+                    result.setChannelTitle(v.getChannelTitle());
+                    result.setThumbnails(v.getThumbnails());
+                    result.setViewCount(v.getViewCount());
+                    results.add(result);
+                }
+            }
+
+            return results;
+
+        } catch (IOException e) {
+            log.error("모든 키워드 포함 검색 중 오류 발생: {}", e.getMessage(), e);
             return List.of();
         }
     }
