@@ -75,6 +75,13 @@ public class ApiService {
 
             OffsetDateTime offsetDateTime = OffsetDateTime.parse(v.getSnippet().getPublishedAt().toString());
 
+            Long viewCount = (v.getStatistics().getViewCount() != null) ?
+                    v.getStatistics().getViewCount().longValue() : 0L;
+            Long likeCount = (v.getStatistics().getLikeCount() != null) ?
+                    v.getStatistics().getLikeCount().longValue() : 0L;
+            Long commentCount = (v.getStatistics().getCommentCount() != null) ?
+                    v.getStatistics().getCommentCount().longValue() : 0L;
+
             trendingVideo.setId(v.getId());
             trendingVideo.setTitle(v.getSnippet().getTitle());
             trendingVideo.setThumbnails(v.getSnippet().getThumbnails().getMedium().getUrl());
@@ -82,9 +89,9 @@ public class ApiService {
             trendingVideo.setPublishedAt(offsetDateTime);
             trendingVideo.setDescription(v.getSnippet().getDescription());
             trendingVideo.setChannelTitle(v.getSnippet().getChannelTitle());
-            trendingVideo.setViewCount(v.getStatistics().getViewCount());
-            trendingVideo.setLikeCount(v.getStatistics().getLikeCount());
-            trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
+            trendingVideo.setViewCount(viewCount);
+            trendingVideo.setLikeCount(likeCount);
+            trendingVideo.setCommentCount(commentCount);
             trendingVideo.setTags(v.getSnippet().getTags());
 
             log.info(trendingVideo.getTitle());

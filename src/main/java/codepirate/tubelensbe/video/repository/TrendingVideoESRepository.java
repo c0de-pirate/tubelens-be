@@ -1,5 +1,6 @@
 package codepirate.tubelensbe.video.repository;
 
+import codepirate.tubelensbe.video.document.ESVideo;
 import codepirate.tubelensbe.video.domain.TrendingVideo;
 import com.google.api.services.youtube.model.Video;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -9,5 +10,5 @@ import java.util.List;
 
 @Repository
 public interface TrendingVideoESRepository {
-    List<TrendingVideo> recommendVideosByTitleVectors(String videoid);
+    List<ESVideo> recommendVideosByTitleVectors(String videoid);
 }
