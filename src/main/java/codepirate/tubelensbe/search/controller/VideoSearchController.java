@@ -3,7 +3,6 @@ package codepirate.tubelensbe.search.controller;
 import codepirate.tubelensbe.search.dto.VideoResult;
 import codepirate.tubelensbe.search.service.VideoSearchService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +19,10 @@ public class VideoSearchController {
     private final VideoSearchService videoSearchService;
 
     @GetMapping("/search")
-    public ResponseEntity<List<VideoResult>> searchVideos(@RequestParam String keyword) {
-        List<VideoResult> results = videoSearchService.searchByKeyword(keyword);
+    public ResponseEntity<List<VideoResult>> searchVideos(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) { // 기본값 'AUTO'
+        List<VideoResult> results = videoSearchService.searchByKeyword(keyword, fuzzinessLevel);
         return ResponseEntity.ok(results);
     }
 }
