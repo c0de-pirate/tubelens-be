@@ -35,7 +35,7 @@ dependencies {
 
 	implementation 'org.projectlombok:lombok'
 	implementation 'org.springframework.boot:spring-boot-starter-quartz'
-	implementation 'co.elastic.clients:elasticsearch-java:8.12.2'
+//	implementation 'co.elastic.clients:elasticsearch-java:8.12.2'
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
   
 	// YouTube API 관련 의존성들

@@ -21,7 +21,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 
-
 @Slf4j
 @Repository
 @RequiredArgsConstructor
@@ -29,34 +28,32 @@ public class VideoSearchRepository {
 
     private final ElasticsearchClient elasticsearchClient;
 
+    // 단일 키워드에 대한 일반 검색 (정확 + 유사 포함)
     public List<VideoResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         try {
+            // 정확히 포함된 제목 검색 (match_phrase)
             SearchResponse<VideoSearch> exactMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
-                            .query(q -> q
-                                    .bool(b -> b
-                                            .should(sh -> sh.matchPhrase(mp -> mp.field("title.ko").query(keyword)))
-                                            .should(sh -> sh.matchPhrase(mp -> mp.field("title.en").query(keyword)))
-                                            .minimumShouldMatch("1")
-                                    )
-                            )
+                            .query(q -> q.bool(b -> b
+                                    .should(sh -> sh.matchPhrase(mp -> mp.field("title.ko").query(keyword)))
+                                    .should(sh -> sh.matchPhrase(mp -> mp.field("title.en").query(keyword)))
+                                    .minimumShouldMatch("1")
+                            ))
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    VideoSearch.class
-            );
+                    VideoSearch.class);
 
+            // 유사 검색 (fuzzy match)
             SearchResponse<VideoSearch> fuzzyMatchResponse = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
-                            .query(q -> q
-                                    .bool(b -> b
-                                            .should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel)))
-                                            .should(sh -> sh.match(m -> m.field("title.en").query(keyword).fuzziness(fuzzinessLevel)))
-                                            .minimumShouldMatch("1")
-                                    )
-                            )
+                            .query(q -> q.bool(b -> b
+                                    .should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel)))
+                                    .should(sh -> sh.match(m -> m.field("title.en").query(keyword).fuzziness(fuzzinessLevel)))
+                                    .minimumShouldMatch("1")
+                            ))
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    VideoSearch.class
-            );
+                    VideoSearch.class);
 
+            // 결과 중복 제거 및 병합
             Set<String> seenTitles = new HashSet<>();
             List<VideoResult> results = new ArrayList<>();
 
@@ -82,6 +79,7 @@ public class VideoSearchRepository {
         }
     }
 
+    // 여러 키워드가 모두 제목에 포함된 경우
     public List<VideoResult> searchByAllKeywordsInTitle(List<String> keywords) {
         try {
             SearchResponse<VideoSearch> response = elasticsearchClient.search(s -> s
@@ -93,8 +91,7 @@ public class VideoSearchRepository {
                                 return b;
                             }))
                             .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    VideoSearch.class
-            );
+                    VideoSearch.class);
 
             Set<String> seenTitles = new HashSet<>();
             List<VideoResult> results = new ArrayList<>();
