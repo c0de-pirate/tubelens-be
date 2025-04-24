@@ -40,7 +40,6 @@ public class SuggestedKeywordController {
                             .stream()
                             .filter(token -> token.length() >= 2)
                             .distinct()
-                            .limit(3)
                             .collect(Collectors.toList());
                     VideoSearchRepository.KeywordGroup group = new VideoSearchRepository.KeywordGroup(title, keywords);
                     if (keywords.contains(keyword)) {
