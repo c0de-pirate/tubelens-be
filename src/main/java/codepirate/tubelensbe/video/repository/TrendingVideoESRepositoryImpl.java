@@ -26,7 +26,6 @@ public class TrendingVideoESRepositoryImpl implements TrendingVideoESRepository 
     private static final Logger log = LoggerFactory.getLogger(ApiService.class);
 
     private final ElasticsearchOperations elasticsearchOperations;
-//    private final String indexNamePrefix = "store-";
     private final ObjectMapper objectMapper;
 
     public TrendingVideoESRepositoryImpl(ElasticsearchOperations elasticsearchOperations, ObjectMapper objectMapper) {
@@ -35,8 +34,9 @@ public class TrendingVideoESRepositoryImpl implements TrendingVideoESRepository 
     }
 
     public List<ESVideo> recommendVideosByTitleVectors(String videoid) {
-        log.info(videoid);
+        String tempID = "_C_xG10JwXs";
 
+        // 1. 입력 받은 videoid로 검색
         NativeQuery searchById = NativeQuery.builder()
                 .withQuery(q -> q
                         .bool(b -> b
@@ -48,45 +48,60 @@ public class TrendingVideoESRepositoryImpl implements TrendingVideoESRepository 
                 .map(SearchHit::getContent)
                 .toList();
 
-        float[] vector = response.get(0).getEmbedding();
+        float[] vector;
+
+        // 검색 결과가 없거나 embedding이 비어있는 경우 tempID로 대체
+        if (response.isEmpty() || response.get(0).getEmbedding() == null || response.get(0).getEmbedding().length == 0) {
+            NativeQuery searchByTempId = NativeQuery.builder()
+                    .withQuery(q -> q
+                            .bool(b -> b
+                                    .must(m -> m.match(mt -> mt.field("id").query(tempID)))
+                            ))
+                    .build();
+
+            List<ESVideo> tempResponse = elasticsearchOperations.search(searchByTempId, ESVideo.class)
+                    .map(SearchHit::getContent)
+                    .toList();
+
+            if (tempResponse.isEmpty() || tempResponse.get(0).getEmbedding() == null) {
+                return List.of(); // 둘 다 임베딩이 없으면 빈 리스트 반환
+            }
+
+            vector = tempResponse.get(0).getEmbedding();
+        } else {
+            vector = response.get(0).getEmbedding();
+        }
 
         List<Float> embedding = new ArrayList<>();
         for (float f : vector) {
             embedding.add(f);
         }
 
-//        Script script = Script.of(s -> s
-//                .source("cosineSimilarity(params.embedding, 'embedding') + 10.0")
-//                .params(Map.of("embedding", JsonData.of(embedding)))
-//        );
-//
-//        NativeQuery searchQuery = NativeQuery.builder()
-//                .withQuery(q -> q.scriptScore(ss -> ss
-//                        .query(query -> query.matchAll(m -> m))
-//                        .script(script)
-//                ))
-//                .build();
+        // 2. 검색 결과 수를 5개로 제한
         NativeQuery searchQuery = NativeQuery.builder()
-                .withQuery(q -> q.scriptScore(ss -> ss
-                        .query(query -> query.matchAll(m -> m))
-                        .script(script -> {
-                                    return script
-                                            .source("cosineSimilarity(params.embedding, 'embedding') + 1.0")
-                                            .params(Map.of("embedding", JsonData.of(embedding)));
-
-                                }
+                .withQuery(q -> q.bool(b -> b
+                        .must(must -> must
+                                .scriptScore(ss -> ss
+                                        .query(query -> query.matchAll(m -> m))
+                                        .script(script -> script
+                                                .source("cosineSimilarity(params.embedding, 'embedding') + 1.0")
+                                                .params(Map.of("embedding", JsonData.of(embedding)))
+                                        )
+                                )
+                        )
+                        .filter(filter -> filter
+                                .exists(exists -> exists
+                                        .field("embedding")
+                                )
                         )
                 ))
+                .withPageable(PageRequest.of(0, 5)) // 결과를 5개로 제한
                 .build();
 
         List<ESVideo> list = elasticsearchOperations.search(searchQuery, ESVideo.class)
                 .map(SearchHit::getContent)
                 .toList();
-        log.info(String.valueOf(list.size()));
 
-//        return elasticsearchOperations.search(searchQuery, TrendingVideo.class)
-//                .map(SearchHit::getContent)
-//                .toList();
-        return List.of();
+        return list; // 빈 리스트 대신 실제 검색 결과 반환
     }
 }

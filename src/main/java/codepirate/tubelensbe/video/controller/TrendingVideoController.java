@@ -25,10 +25,11 @@ public class TrendingVideoController {
     private static final Logger log = LoggerFactory.getLogger(TrendingVideoController.class);
 
     @GetMapping("/recomm")
-//    @ResponseBody
+    @ResponseBody
     public List<ESVideo> videoInsert(@RequestParam String videoid) throws IOException {
         List<String> idlist = new ArrayList<>();
         idlist.add(videoid);
+
         return trendingVideoService.recommVideos(idlist);
     }
 }
