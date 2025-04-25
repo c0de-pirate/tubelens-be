@@ -53,16 +53,12 @@ public class ApiService {
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
 
-        log.info(String.valueOf(videoListResponse.getItems().size()));
-
         if (videoListResponse.get("error") != null) {
             return;
         }
 
         // 검색 결과에서 동영상 목록 가져오기
         List<Video> videoResponseList = videoListResponse.getItems();
-
-        log.info(String.valueOf(videoResponseList.size()));
 
         List<TrendingVideo> trendingVideoList = new ArrayList<>();
         for (Video v : videoResponseList) {
@@ -93,8 +89,6 @@ public class ApiService {
             trendingVideo.setLikeCount(likeCount);
             trendingVideo.setCommentCount(commentCount);
             trendingVideo.setTags(v.getSnippet().getTags());
-
-            log.info(trendingVideo.getTitle());
 
             trendingVideoList.add(trendingVideo);
         }
