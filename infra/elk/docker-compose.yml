@@ -17,7 +17,6 @@ services:
     volumes:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
       - ./elasticsearch/data:/usr/share/elasticsearch/data
-
     ports:
       - "${ELASTIC_PORT}:9200"
       - "9300:9300"
@@ -28,6 +27,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  init-template:
+    image: curlimages/curl
+    container_name: init-template
+    depends_on:
+      - elasticsearch
+    user: root               # ✨ 이거 추가
+    volumes:
+      - ./init_template.sh:/init_template.sh
+      - ./tubelens_video_template.json:/tubelens_video_template.json
+    networks:
+      - elk-network
+    entrypoint: [ "sh", "-c", "chmod +x /init_template.sh && /init_template.sh" ]
+
+
 
   logstash:
     build:
