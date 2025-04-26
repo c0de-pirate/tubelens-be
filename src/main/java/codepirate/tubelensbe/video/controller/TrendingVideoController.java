@@ -1,6 +1,6 @@
 package codepirate.tubelensbe.video.controller;
 
-import codepirate.tubelensbe.video.document.ESVideo;
+import codepirate.tubelensbe.video.domain.ESVideo;
 import codepirate.tubelensbe.video.service.TrendingVideoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,9 +1,6 @@
 package codepirate.tubelensbe.video.repository;
 
-import codepirate.tubelensbe.video.document.ESVideo;
-import codepirate.tubelensbe.video.domain.TrendingVideo;
-import com.google.api.services.youtube.model.Video;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
+import codepirate.tubelensbe.video.domain.ESVideo;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
