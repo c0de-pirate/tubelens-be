@@ -1,4 +1,4 @@
-package codepirate.tubelensbe.video.document;
+package codepirate.tubelensbe.video.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,7 +1,7 @@
 package codepirate.tubelensbe.video.service;
 
 import codepirate.tubelensbe.video.controller.TrendingVideoController;
-import codepirate.tubelensbe.video.document.ESVideo;
+import codepirate.tubelensbe.video.domain.ESVideo;
 import codepirate.tubelensbe.video.repository.TrendingVideoESRepository;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;

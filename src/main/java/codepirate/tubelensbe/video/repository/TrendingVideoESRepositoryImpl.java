@@ -1,10 +1,8 @@
 package codepirate.tubelensbe.video.repository;
 
-import co.elastic.clients.elasticsearch._types.Script;
 import co.elastic.clients.json.JsonData;
 
-import codepirate.tubelensbe.video.document.ESVideo;
-import codepirate.tubelensbe.video.domain.TrendingVideo;
+import codepirate.tubelensbe.video.domain.ESVideo;
 import codepirate.tubelensbe.video.service.ApiService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
