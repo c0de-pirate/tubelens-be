@@ -1,6 +1,7 @@
 package codepirate.tubelensbe.video.controller;
 
 import codepirate.tubelensbe.video.domain.ESVideo;
+import codepirate.tubelensbe.video.domain.TrendingVideo;
 import codepirate.tubelensbe.video.service.TrendingVideoService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,7 @@ public class TrendingVideoController {
 
     @GetMapping("/recomm")
     @ResponseBody
-    public List<ESVideo> videoInsert(@RequestParam String videoid) throws IOException {
+    public List<TrendingVideo> videoInsert(@RequestParam String videoid) throws IOException {
         List<String> idlist = new ArrayList<>();
         idlist.add(videoid);
 
