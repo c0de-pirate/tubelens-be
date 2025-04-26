@@ -92,6 +92,11 @@ public class TrendingVideoESRepositoryImpl implements TrendingVideoESRepository 
                                         .field("embedding")
                                 )
                         )
+                        .mustNot(mustnot -> mustnot
+                                .ids(id -> id
+                                        .values(videoid)
+                                )
+                        )
                 ))
                 .withPageable(PageRequest.of(0, 5)) // 결과를 5개로 제한
                 .build();
