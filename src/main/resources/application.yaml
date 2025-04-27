@@ -1,4 +1,11 @@
 spring:
+  profiles:
+    active: private
   jpa:
     hibernate:
       ddl-auto: create-drop
+  application:
+    name: tubelens
+
+  elasticsearch:
+    uris: http://localhost:9200/
