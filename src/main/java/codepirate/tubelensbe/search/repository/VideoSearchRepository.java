@@ -33,7 +33,7 @@ public class VideoSearchRepository {
                                     .should(sh -> sh.matchPhrase(mp -> mp.field("title.en").query(keyword)))
                                     .minimumShouldMatch("1")
                             ))
-                            .sort(so -> so.field(f -> f.field("viewCount").order(SortOrder.Desc))),
+                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
                     SearchVideo.class);
 
             SearchResponse<SearchVideo> fuzzyMatchResponse = elasticsearchClient.search(s -> s
@@ -43,7 +43,7 @@ public class VideoSearchRepository {
                                     .should(sh -> sh.match(m -> m.field("title.en").query(keyword).fuzziness(fuzzinessLevel)))
                                     .minimumShouldMatch("1")
                             ))
-                            .sort(so -> so.field(f -> f.field("viewCount").order(SortOrder.Desc))),
+                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
                     SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
@@ -171,6 +171,12 @@ public class VideoSearchRepository {
                                     .query(keyword)
                                     .operator(Operator.And) // 모든 단어 포함
                             ))
+                            .sort(so -> so
+                                    .field(f -> f
+                                            .field("view_count")
+                                            .order(SortOrder.Desc) // 🔥 view_count 기준 내림차순 정렬 추가
+                                    )
+                            )
                             .size(50), // 추천용이니까 적당한 개수 제한
                     SearchVideo.class);
 
