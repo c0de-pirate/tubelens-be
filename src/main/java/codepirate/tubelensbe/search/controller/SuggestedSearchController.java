@@ -24,17 +24,20 @@ public class SuggestedSearchController {
             @RequestParam List<String> keywords,
             @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) {
 
-        if (keywords == null || keywords.isEmpty()) {
+        if (input == null || input.isBlank()) {
             return ResponseEntity.badRequest().body(List.of());
         }
 
-        // 1. 모든 키워드가 제목에 포함된 결과
-        List<VideoSearchResult> exactMatches = videoSearchService.searchByAllKeywordsInTitle(keywords);
+        // ✅ 1. 모든 키워드가 제목에 포함된 결과 (AND 검색)
+        List<String> combinedKeywords = new ArrayList<>(keywords);
+        combinedKeywords.add(input);
 
-        // 2. 사용자가 입력한 키워드로 일반 검색
-        List<VideoSearchResult> fuzzyMatches = videoSearchService.searchByKeyword(input, fuzzinessLevel);
+        List<VideoSearchResult> exactMatches = videoSearchService.searchByAllKeywordsInTitle(combinedKeywords);
 
-        // 3. 중복 제거 후 정렬: exact → fuzzy
+        // ✅ 2. input OR keywords 관련 fuzzy 검색 (should 검색)
+        List<VideoSearchResult> fuzzyMatches = videoSearchService.searchByInputOrKeywords(input, keywords, fuzzinessLevel);
+
+        // ✅ 3. 중복 제거 후 exact → fuzzy 순서로 합치기
         Set<String> seenTitles = new HashSet<>();
         List<VideoSearchResult> combinedResults = new ArrayList<>();
 
