@@ -9,9 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -26,35 +24,64 @@ public class SuggestedKeywordController {
             @RequestParam String keyword,
             @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) {
 
-        // 접두사 기반 검색을 위한 쿼리 적용
-        List<VideoSearchResult> searchResults = videoSearchRepository.searchByPrefix(keyword);
+        List<VideoSearchResult> prefixResults = videoSearchRepository.searchByPrefix(keyword);
+        List<VideoSearchResult> containsResults = videoSearchRepository.searchByContains(keyword);
 
-        List<VideoSearchRepository.KeywordGroup> matched = new ArrayList<>();
-        List<VideoSearchRepository.KeywordGroup> unmatched = new ArrayList<>();
+        Set<String> seenTitles = new HashSet<>();
+        List<VideoSearchRepository.KeywordGroup> keywordGroups = new ArrayList<>();
 
-        // viewCount 내림차순 정렬 후 키워드 그룹화 (키워드 최대 3개 제한)
-        searchResults.stream()
-                .sorted(Comparator.comparingLong(VideoSearchResult::getViewCount).reversed())
-                .forEach(result -> {
-                    String title = result.getTitle();
-                    List<String> keywords = List.of(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
-                            .stream()
-                            .filter(token -> token.length() >= 2 && token.length() <= 4)
-                            .distinct()
-                            .limit(2)
-                            .collect(Collectors.toList());
-                    VideoSearchRepository.KeywordGroup group = new VideoSearchRepository.KeywordGroup(title, keywords);
-                    if (keywords.contains(keyword)) {
-                        matched.add(group);
-                    } else {
-                        unmatched.add(group);
+        // ✅ 1. 접두사(prefix) 검색 결과
+        for (VideoSearchResult result : prefixResults) {
+            if (seenTitles.add(result.getTitle())) {
+                String title = result.getTitle();
+                List<String> tokens = Arrays.stream(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
+                        .filter(token -> token.length() >= 2 && token.length() <= 5)
+                        .distinct()
+                        .limit(2)
+                        .toList();
+
+                if (!tokens.isEmpty()) {
+                    keywordGroups.add(new VideoSearchRepository.KeywordGroup(title, tokens));
+                }
+            }
+        }
+
+        // ✅ 2. 포함(contains) 검색 결과 (수정 포인트)
+        for (VideoSearchResult result : containsResults) {
+            if (seenTitles.add(result.getTitle())) {
+                String title = result.getTitle();
+
+                List<String> tokens = Arrays.stream(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
+                        .filter(token -> token.length() >= 2 && token.length() <= 10)
+                        .toList();
+
+                if (tokens.isEmpty()) continue;
+
+                String firstToken = tokens.get(0);
+                String matchedToken = null;
+
+                for (String token : tokens) {
+                    if (token.contains(keyword)) {
+                        matchedToken = token;
+                        break;
                     }
-                });
+                }
 
-        List<VideoSearchRepository.KeywordGroup> combined = new ArrayList<>();
-        combined.addAll(matched);
-        combined.addAll(unmatched);
+                if (matchedToken != null) {
+                    List<String> selectedKeywords = new ArrayList<>();
 
-        return ResponseEntity.ok(combined);
+                    if (!firstToken.equals(matchedToken)) {
+                        selectedKeywords.add(firstToken);
+                        selectedKeywords.add(matchedToken);
+                    } else {
+                        selectedKeywords.add(firstToken); // 같으면 하나만
+                    }
+
+                    keywordGroups.add(new VideoSearchRepository.KeywordGroup(title, selectedKeywords));
+                }
+            }
+        }
+
+        return ResponseEntity.ok(keywordGroups);
     }
 }

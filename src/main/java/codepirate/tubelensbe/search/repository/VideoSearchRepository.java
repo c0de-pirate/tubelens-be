@@ -2,6 +2,7 @@ package codepirate.tubelensbe.search.repository;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import codepirate.tubelensbe.search.dto.VideoSearchResult;
@@ -75,7 +76,7 @@ public class VideoSearchRepository {
                                     .should(sh -> sh.prefix(p -> p.field("title.en").value(keyword))).boost(2.0f)
                                     .minimumShouldMatch("1")
                             ))
-                            .sort(so -> so.field(f -> f.field("viewCount").order(SortOrder.Desc))),
+                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
                     SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
@@ -107,15 +108,30 @@ public class VideoSearchRepository {
     // 제목에 포함된 모든 키워드에 대해 검색
     public List<VideoSearchResult> searchByAllKeywordsInTitle(List<String> keywords) {
         try {
+            if (keywords == null || keywords.isEmpty()) {
+                return List.of();
+            }
+
             SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
                             .index("tubelens_video")
                             .query(q -> q.bool(b -> {
                                 for (String keyword : keywords) {
-                                    b.must(m -> m.matchPhrase(mp -> mp.field("title.ko").query(keyword)));
+                                    b.must(m -> m
+                                            .matchPhrase(mp -> mp
+                                                    .field("title.ko") // 🔥 title.ko 필드만
+                                                    .query(keyword)
+                                                    .boost(2.0f)
+                                            )
+                                    );
                                 }
                                 return b;
                             }))
-                            .sort(so -> so.field(f -> f.field("viewCount").order(SortOrder.Desc))),
+                            .sort(so -> so
+                                    .field(f -> f
+                                            .field("view_count") // 🔥 view_count로 정렬
+                                            .order(SortOrder.Desc)
+                                    )
+                            ),
                     SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
@@ -145,6 +161,79 @@ public class VideoSearchRepository {
             this.keywords = keywords;
         }
     }
+
+    public List<VideoSearchResult> searchByContains(String keyword) {
+        try {
+            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
+                            .index("tubelens_video")
+                            .query(q -> q.match(m -> m
+                                    .field("title.ko")
+                                    .query(keyword)
+                                    .operator(Operator.And) // 모든 단어 포함
+                            ))
+                            .size(50), // 추천용이니까 적당한 개수 제한
+                    SearchVideo.class);
+
+            List<VideoSearchResult> results = new ArrayList<>();
+            for (Hit<SearchVideo> hit : response.hits().hits()) {
+                SearchVideo v = hit.source();
+                if (v != null) {
+                    results.add(mapToResult(v));
+                }
+            }
+            return results;
+
+        } catch (IOException e) {
+            log.error("제목에 키워드 포함 검색 실패: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    public List<VideoSearchResult> searchByInputOrKeywords(String input, List<String> keywords, String fuzzinessLevel) {
+        try {
+            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
+                            .index("tubelens_video")
+                            .query(q -> q.bool(b -> {
+                                // should: input + keywords 중 하나라도 매칭
+                                for (String keyword : keywords) {
+                                    b.should(sh -> sh.match(m -> m
+                                            .field("title.ko")
+                                            .query(keyword)
+                                            .fuzziness(fuzzinessLevel)
+                                    ));
+                                }
+                                b.should(sh -> sh.match(m -> m
+                                        .field("title.ko")
+                                        .query(input)
+                                        .fuzziness(fuzzinessLevel)
+                                ));
+                                b.minimumShouldMatch("1"); // 하나만 매칭해도 됨
+                                return b;
+                            }))
+                            .sort(so -> so
+                                    .field(f -> f
+                                            .field("_score") // 관련성 높은 순 정렬
+                                            .order(SortOrder.Desc)
+                                    )
+                            ),
+                    SearchVideo.class);
+
+            List<VideoSearchResult> results = new ArrayList<>();
+            for (var hit : response.hits().hits()) {
+                SearchVideo v = hit.source();
+                if (v != null && v.getTitle() != null) {
+                    results.add(mapToResult(v));
+                }
+            }
+
+            return results;
+
+        } catch (IOException e) {
+            log.error("Input OR keywords fuzzy 검색 실패: {}", e.getMessage(), e);
+            return List.of();
+        }
+    }
+
 
     // 제목에서 키워드를 추출하여 그룹화
     public List<KeywordGroup> extractKeywordGroupsFromTitles(List<VideoSearchResult> searchResults) {
