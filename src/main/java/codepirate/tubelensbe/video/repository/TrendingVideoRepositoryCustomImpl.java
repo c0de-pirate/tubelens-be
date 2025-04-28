@@ -35,18 +35,22 @@ public class TrendingVideoRepositoryCustomImpl implements TrendingVideoRepositor
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 TrendingVideo v = videoList.get(i);
 
-                LocalDateTime localDateTime = v.getPublishedAt().toLocalDateTime();
+                LocalDateTime publishedAt = v.getPublishedAt().toLocalDateTime();
+
+                Long viewCount = (v.getViewCount() != null) ? v.getViewCount() : 0L;
+                Long likeCount = (v.getLikeCount() != null) ? v.getLikeCount() : 0L;
+                Long commentCount = (v.getCommentCount() != null) ? v.getCommentCount() : 0L;
 
                 ps.setString(1, v.getId());
                 ps.setString(2, v.getTitle());
                 ps.setString(3, v.getThumbnails());
                 ps.setString(4, v.getEmbedHtml());
-                ps.setTimestamp(5, Timestamp.valueOf(localDateTime));
+                ps.setTimestamp(5, Timestamp.valueOf(publishedAt));
                 ps.setString(6, v.getDescription());
                 ps.setString(7, v.getChannelTitle());
-                ps.setObject(8, v.getViewCount());
-                ps.setObject(9, v.getLikeCount());
-                ps.setObject(10, v.getCommentCount());
+                ps.setLong(8, viewCount);
+                ps.setLong(9, likeCount);
+                ps.setLong(10, commentCount);
                 ps.setTimestamp(11, Timestamp.valueOf(LocalDateTime.now()));
             }
 

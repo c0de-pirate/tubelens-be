@@ -36,11 +36,11 @@ public class TrendingVideo {
 
     private String channelTitle ;
 
-    private BigInteger viewCount ;
+    private Long viewCount ;
     
-    private BigInteger likeCount ;
+    private Long likeCount ;
     
-    private BigInteger commentCount ;
+    private Long commentCount ;
 
     @ElementCollection
     private List<String> tags;
