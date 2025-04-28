@@ -13,8 +13,6 @@ import codepirate.tubelensbe.search.domain.SearchVideo;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -27,7 +25,7 @@ public class VideoSearchRepository {
     public List<VideoSearchResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         try {
             SearchResponse<SearchVideo> exactMatchResponse = elasticsearchClient.search(s -> s
-                            .index("tubelens_video")
+                            .index("tubelens_videos")
                             .query(q -> q.bool(b -> b
                                     .should(sh -> sh.matchPhrase(mp -> mp.field("title.ko").query(keyword)))
                                     .should(sh -> sh.matchPhrase(mp -> mp.field("title.en").query(keyword)))
@@ -37,7 +35,7 @@ public class VideoSearchRepository {
                     SearchVideo.class);
 
             SearchResponse<SearchVideo> fuzzyMatchResponse = elasticsearchClient.search(s -> s
-                            .index("tubelens_video")
+                            .index("tubelens_videos")
                             .query(q -> q.bool(b -> b
                                     .should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel)))
                                     .should(sh -> sh.match(m -> m.field("title.en").query(keyword).fuzziness(fuzzinessLevel)))
@@ -49,14 +47,8 @@ public class VideoSearchRepository {
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
 
-            Consumer<SearchVideo> addIfNotDuplicate = v -> {
-                if (v != null && v.getTitle() != null && seenTitles.add(v.getTitle())) {
-                    results.add(mapToResult(v));
-                }
-            };
-
-            exactMatchResponse.hits().hits().forEach(hit -> addIfNotDuplicate.accept(hit.source()));
-            fuzzyMatchResponse.hits().hits().forEach(hit -> addIfNotDuplicate.accept(hit.source()));
+            addUniqueResults(exactMatchResponse, seenTitles, results);
+            addUniqueResults(fuzzyMatchResponse, seenTitles, results);
 
             return results;
 
@@ -66,11 +58,10 @@ public class VideoSearchRepository {
         }
     }
 
-    // 접두사 기반 검색
     public List<VideoSearchResult> searchByPrefix(String keyword) {
         try {
             SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_video")
+                            .index("tubelens_videos")
                             .query(q -> q.bool(b -> b
                                     .should(sh -> sh.prefix(p -> p.field("title.ko").value(keyword))).boost(2.0f)
                                     .should(sh -> sh.prefix(p -> p.field("title.en").value(keyword))).boost(2.0f)
@@ -87,7 +78,6 @@ public class VideoSearchRepository {
                 if (video != null && video.getTitle() != null && seenTitles.add(video.getTitle())) {
                     String normalizedTitle = video.getTitle().toLowerCase().replaceAll("[^a-z0-9가-힣]", " ");
                     String normalizedKeyword = keyword.toLowerCase();
-                    // 제목의 첫 단어가 키워드로 시작하는 경우만
                     String firstToken = Arrays.stream(normalizedTitle.split("\\s+"))
                             .findFirst()
                             .orElse("");
@@ -105,7 +95,6 @@ public class VideoSearchRepository {
         }
     }
 
-    // 제목에 포함된 모든 키워드에 대해 검색
     public List<VideoSearchResult> searchByAllKeywordsInTitle(List<String> keywords) {
         try {
             if (keywords == null || keywords.isEmpty()) {
@@ -113,31 +102,25 @@ public class VideoSearchRepository {
             }
 
             SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_video")
+                            .index("tubelens_videos")
                             .query(q -> q.bool(b -> {
                                 for (String keyword : keywords) {
                                     b.must(m -> m
                                             .matchPhrase(mp -> mp
-                                                    .field("title.ko") // 🔥 title.ko 필드
+                                                    .field("title.ko")
                                                     .query(keyword)
                                                     .boost(2.0f)
                                             )
                                     );
                                 }
                                 return b;
-                            }))
-                    ,
+                            })),
                     SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
 
-            for (var hit : response.hits().hits()) {
-                SearchVideo v = hit.source();
-                if (v != null && v.getTitle() != null && seenTitles.add(v.getTitle())) {
-                    results.add(mapToResult(v));
-                }
-            }
+            addUniqueResults(response, seenTitles, results);
 
             return results;
 
@@ -147,41 +130,29 @@ public class VideoSearchRepository {
         }
     }
 
-    public static class KeywordGroup {
-        public String title;
-        public List<String> keywords;
-
-        public KeywordGroup(String title, List<String> keywords) {
-            this.title = title;
-            this.keywords = keywords;
-        }
-    }
-
     public List<VideoSearchResult> searchByContains(String keyword) {
         try {
             SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_video")
+                            .index("tubelens_videos")
                             .query(q -> q.match(m -> m
                                     .field("title.ko")
                                     .query(keyword)
-                                    .operator(Operator.And) // 모든 단어 포함
+                                    .operator(Operator.And)
                             ))
                             .sort(so -> so
                                     .field(f -> f
                                             .field("view_count")
-                                            .order(SortOrder.Desc) // 🔥 view_count 기준 내림차순 정렬 추가
+                                            .order(SortOrder.Desc)
                                     )
                             )
-                            .size(50), // 추천용이니까 적당한 개수 제한
+                            .size(50),
                     SearchVideo.class);
 
+            Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
-            for (Hit<SearchVideo> hit : response.hits().hits()) {
-                SearchVideo v = hit.source();
-                if (v != null) {
-                    results.add(mapToResult(v));
-                }
-            }
+
+            addUniqueResults(response, seenTitles, results);
+
             return results;
 
         } catch (IOException e) {
@@ -193,9 +164,8 @@ public class VideoSearchRepository {
     public List<VideoSearchResult> searchByInputOrKeywords(String input, List<String> keywords, String fuzzinessLevel) {
         try {
             SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_video")
+                            .index("tubelens_videos")
                             .query(q -> q.bool(b -> {
-                                // should: input + keywords 중 하나라도 매칭
                                 for (String keyword : keywords) {
                                     b.should(sh -> sh.match(m -> m
                                             .field("title.ko")
@@ -208,24 +178,21 @@ public class VideoSearchRepository {
                                         .query(input)
                                         .fuzziness(fuzzinessLevel)
                                 ));
-                                b.minimumShouldMatch("1"); // 하나만 매칭해도 됨
+                                b.minimumShouldMatch("1");
                                 return b;
                             }))
                             .sort(so -> so
                                     .field(f -> f
-                                            .field("_score") // 관련성 높은 순 정렬
+                                            .field("_score")
                                             .order(SortOrder.Desc)
                                     )
                             ),
                     SearchVideo.class);
 
+            Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
-            for (var hit : response.hits().hits()) {
-                SearchVideo v = hit.source();
-                if (v != null && v.getTitle() != null) {
-                    results.add(mapToResult(v));
-                }
-            }
+
+            addUniqueResults(response, seenTitles, results);
 
             return results;
 
@@ -236,35 +203,16 @@ public class VideoSearchRepository {
     }
 
 
-    // 제목에서 키워드를 추출하여 그룹화
-    public List<KeywordGroup> extractKeywordGroupsFromTitles(List<VideoSearchResult> searchResults) {
-        List<KeywordGroup> keywordGroups = new ArrayList<>();
 
-        for (VideoSearchResult result : searchResults) {
-            String title = result.getTitle();
-            if (title == null || title.isBlank()) continue;
-
-            String[] tokens = title.split("\\s+|[^가-힣a-zA-Z0-9]");
-            List<String> keywords = Arrays.stream(tokens)
-                    .filter(token -> token.length() >= 2)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            if (!keywords.isEmpty()) {
-                keywordGroups.add(new KeywordGroup(title, keywords));
+    private void addUniqueResults(SearchResponse<SearchVideo> response, Set<String> seenTitles, List<VideoSearchResult> results) {
+        for (Hit<SearchVideo> hit : response.hits().hits()) {
+            SearchVideo video = hit.source();
+            if (video != null && video.getTitle() != null && seenTitles.add(video.getTitle())) {
+                results.add(mapToResult(video));
             }
         }
-
-        return keywordGroups;
     }
 
-    // 키워드를 기반으로 추천어 그룹화
-    public List<KeywordGroup> suggestKeywordGroupsFromSearch(String keyword, String fuzzinessLevel) {
-        List<VideoSearchResult> results = searchByKeyword(keyword, fuzzinessLevel);
-        return extractKeywordGroupsFromTitles(results);
-    }
-
-    // SearchVideo 객체를 VideoSearchResult로 변환
     private VideoSearchResult mapToResult(SearchVideo v) {
         VideoSearchResult result = new VideoSearchResult();
         result.setId(v.getId());
@@ -274,5 +222,15 @@ public class VideoSearchRepository {
         result.setViewCount(v.getViewCount());
         result.setEmbedHtml(v.getEmbedHtml());
         return result;
+    }
+
+    public static class KeywordGroup {
+        public String title;
+        public List<String> keywords;
+
+        public KeywordGroup(String title, List<String> keywords) {
+            this.title = title;
+            this.keywords = keywords;
+        }
     }
 }
