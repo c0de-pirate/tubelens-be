@@ -118,7 +118,7 @@ public class VideoSearchRepository {
                                 for (String keyword : keywords) {
                                     b.must(m -> m
                                             .matchPhrase(mp -> mp
-                                                    .field("title.ko") // 🔥 title.ko 필드만
+                                                    .field("title.ko") // 🔥 title.ko 필드
                                                     .query(keyword)
                                                     .boost(2.0f)
                                             )
@@ -126,12 +126,7 @@ public class VideoSearchRepository {
                                 }
                                 return b;
                             }))
-                            .sort(so -> so
-                                    .field(f -> f
-                                            .field("view_count") // 🔥 view_count로 정렬
-                                            .order(SortOrder.Desc)
-                                    )
-                            ),
+                    ,
                     SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
@@ -272,10 +267,12 @@ public class VideoSearchRepository {
     // SearchVideo 객체를 VideoSearchResult로 변환
     private VideoSearchResult mapToResult(SearchVideo v) {
         VideoSearchResult result = new VideoSearchResult();
+        result.setId(v.getId());
         result.setTitle(v.getTitle());
         result.setChannelTitle(v.getChannelTitle());
         result.setThumbnails(v.getThumbnails());
         result.setViewCount(v.getViewCount());
+        result.setEmbedHtml(v.getEmbedHtml());
         return result;
     }
 }
