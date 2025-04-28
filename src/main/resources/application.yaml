@@ -7,3 +7,12 @@ spring:
 
 server:
   port: 8080
+
+  elasticsearch:
+    uris: http://localhost:9200/
+
+logging:
+  level:
+    root: INFO
+    codepirate.tubelensbe: DEBUG  # 당신의 패키지에 맞게 수정하세요
+    org.springframework.web: INFO

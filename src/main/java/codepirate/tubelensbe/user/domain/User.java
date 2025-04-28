@@ -32,7 +32,10 @@ public class User {
     private String gender;
 
     @Column(nullable = true)
-    private java.util.Date hire_date;
+    private java.util.Date hire_date;   // 가입일/입사일
+
+    @Column(nullable = true)
+    private String channel_id;  // YouTube 채널 ID
 
     @Column(nullable = true)
     private String etc;
@@ -50,15 +53,17 @@ public class User {
         this.email = email;
         this.picture = picture;
         this.authority = authority;
+        this.hire_date = new java.util.Date(); // 가입 시 현재 시간 설정
     }
 
-    public User(String googleId, String name, String email, String picture, String gender, java.util.Date hire_date, String etc, Authority authority) {
+    public User(String googleId, String name, String email, String picture, String gender, java.util.Date hire_date, String channel_id, String etc, Authority authority) {
         this.googleId = googleId;
         this.name = name;
         this.email = email;
         this.picture = picture;
         this.gender = gender;
         this.hire_date = hire_date;
+        this.channel_id = channel_id;
         this.etc = etc;
         this.authority = authority;
     }
