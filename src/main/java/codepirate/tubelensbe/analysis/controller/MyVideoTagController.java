@@ -1,13 +1,9 @@
 package codepirate.tubelensbe.analysis.controller;
 
 import codepirate.tubelensbe.analysis.dto.TagDto;
-import codepirate.tubelensbe.analysis.dto.TagListDto;
 import codepirate.tubelensbe.analysis.service.TagService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -18,16 +14,18 @@ import java.util.List;
 public class MyVideoTagController {
     private final TagService tagService;
 
-    @PostMapping("/refresh")
-    public ResponseEntity<Void> refreshTags() throws GeneralSecurityException, IOException {
-        tagService.refreshTagsIfNeeded();
-        return ResponseEntity.ok().build();
+    @PostMapping("/refresh/{channelId}")
+    public List<TagDto> refreshTags(@PathVariable("channelId") String channelId, @RequestHeader("Authorization") String accessToken,
+                           @RequestHeader("refreshToken") String refreshToken) throws GeneralSecurityException, IOException {
+        tagService.refreshTags(channelId, accessToken, refreshToken);
+        return tagService.getTags(channelId, accessToken, refreshToken);
     }
 
-    @GetMapping("/wordcloud")
-    public ResponseEntity<TagListDto> getWordCloud(){
-        TagListDto tags = tagService.getTags();
-        return ResponseEntity.ok(tags);
+    @GetMapping("/{channelId}")
+    public List<TagDto> getTags(@PathVariable("channelId") String channelId,
+                                @RequestHeader("Authorization") String accessToken,
+                                @RequestHeader("refreshToken") String refreshToken) throws GeneralSecurityException, IOException {
+        return tagService.getTags(channelId, accessToken, refreshToken);
     }
 
 }
