@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.io.IOException;
+import java.util.Optional;
 
 
 @Controller
@@ -25,11 +26,20 @@ public class TrendingVideoController {
 
     private static final Logger log = LoggerFactory.getLogger(TrendingVideoController.class);
 
+    @GetMapping
+    @ResponseBody
+    public Optional<TrendingVideo> getVideo(@RequestParam String videoId) {
+        List<String> idlist = new ArrayList<>();
+        idlist.add(videoId);
+
+        return trendingVideoService.getVideo(idlist);
+    }
+
     @GetMapping("/recomm")
     @ResponseBody
-    public List<TrendingVideo> videoInsert(@RequestParam String videoid) throws IOException {
+    public List<TrendingVideo> videoInsert(@RequestParam String videoId) throws IOException {
         List<String> idlist = new ArrayList<>();
-        idlist.add(videoid);
+        idlist.add(videoId);
 
         return trendingVideoService.recommVideos(idlist);
     }

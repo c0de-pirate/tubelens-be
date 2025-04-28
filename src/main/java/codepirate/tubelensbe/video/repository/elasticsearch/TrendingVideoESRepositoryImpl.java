@@ -1,4 +1,4 @@
-package codepirate.tubelensbe.video.repository;
+package codepirate.tubelensbe.video.repository.elasticsearch;
 
 import co.elastic.clients.json.JsonData;
 
