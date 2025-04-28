@@ -4,14 +4,12 @@ import codepirate.tubelensbe.search.dto.VideoSearchResult;
 import codepirate.tubelensbe.search.repository.VideoSearchRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/youtube")
 @RequiredArgsConstructor
@@ -19,7 +17,7 @@ public class SuggestedKeywordController {
 
     private final VideoSearchRepository videoSearchRepository;
 
-    @GetMapping("/suggested/structured")
+    @GetMapping("/suggestion")
     public ResponseEntity<List<VideoSearchRepository.KeywordGroup>> getStructuredKeywordGroups(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) {

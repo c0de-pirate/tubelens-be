@@ -13,10 +13,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SearchVideo {
+    private String id;
     private String title;
     private String thumbnails;
     @JsonProperty("channel_title")
     private String channelTitle;
     @JsonProperty("view_count")
     private Long viewCount;
+    @JsonProperty("embed_html")
+    private String embedHtml;
 }
