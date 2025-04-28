@@ -221,7 +221,7 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-src/main/resources/application-private.yml
+src/main/resources/application-dev.yml
 application-private.yml
 
 infra/elk/elasticsearch/data

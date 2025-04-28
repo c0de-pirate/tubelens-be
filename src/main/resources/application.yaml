@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: private
+    active: dev
   jpa:
     hibernate:
       ddl-auto: create-drop

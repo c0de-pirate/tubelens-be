@@ -22,10 +22,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class YouTubeAPiClient {
 
-    @Value("${google.oauth.client-id}")
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
 
-    @Value("${google.oauth.client-secret}")
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
 
     private YouTube getYoutubeClient(String accessToken, String refreshToken) throws GeneralSecurityException, IOException {
