@@ -2,16 +2,11 @@ package codepirate.tubelensbe.video.service;
 
 import codepirate.tubelensbe.video.domain.TrendingVideo;
 import codepirate.tubelensbe.video.dto.VideoParam;
-import codepirate.tubelensbe.video.repository.TrendingVideoRepository;
 import codepirate.tubelensbe.video.repository.TrendingVideoRepositoryCustom;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.client.util.DateTime;
-import com.google.api.client.util.Value;
 import com.google.api.services.youtube.YouTube;
-import com.google.api.services.youtube.model.SearchListResponse;
-import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.Video;
 import com.google.api.services.youtube.model.VideoListResponse;
 import org.slf4j.Logger;
@@ -19,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,7 +30,7 @@ public class ApiService {
 
     public void insertVideos(VideoParam param) throws IOException {
 
-//         JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
+        // JSON 데이터를 처리하기 위한 JsonFactory 객체 생성
         JsonFactory jsonFactory = new JacksonFactory();
 
         // YouTube 객체를 빌드하여 API에 접근할 수 있는 YouTube 클라이언트 생성
@@ -60,16 +53,12 @@ public class ApiService {
         // 검색 요청 실행 및 응답 받아오기
         VideoListResponse videoListResponse = video.execute();
 
-        log.info(String.valueOf(videoListResponse.getItems().size()));
-
         if (videoListResponse.get("error") != null) {
             return;
         }
 
         // 검색 결과에서 동영상 목록 가져오기
         List<Video> videoResponseList = videoListResponse.getItems();
-
-        log.info(String.valueOf(videoResponseList.size()));
 
         List<TrendingVideo> trendingVideoList = new ArrayList<>();
         for (Video v : videoResponseList) {
@@ -82,6 +71,13 @@ public class ApiService {
 
             OffsetDateTime offsetDateTime = OffsetDateTime.parse(v.getSnippet().getPublishedAt().toString());
 
+            Long viewCount = (v.getStatistics().getViewCount() != null) ?
+                    v.getStatistics().getViewCount().longValue() : 0L;
+            Long likeCount = (v.getStatistics().getLikeCount() != null) ?
+                    v.getStatistics().getLikeCount().longValue() : 0L;
+            Long commentCount = (v.getStatistics().getCommentCount() != null) ?
+                    v.getStatistics().getCommentCount().longValue() : 0L;
+
             trendingVideo.setId(v.getId());
             trendingVideo.setTitle(v.getSnippet().getTitle());
             trendingVideo.setThumbnails(v.getSnippet().getThumbnails().getMedium().getUrl());
@@ -89,12 +85,10 @@ public class ApiService {
             trendingVideo.setPublishedAt(offsetDateTime);
             trendingVideo.setDescription(v.getSnippet().getDescription());
             trendingVideo.setChannelTitle(v.getSnippet().getChannelTitle());
-            trendingVideo.setViewCount(v.getStatistics().getViewCount());
-            trendingVideo.setLikeCount(v.getStatistics().getLikeCount());
-            trendingVideo.setCommentCount(v.getStatistics().getCommentCount());
+            trendingVideo.setViewCount(viewCount);
+            trendingVideo.setLikeCount(likeCount);
+            trendingVideo.setCommentCount(commentCount);
             trendingVideo.setTags(v.getSnippet().getTags());
-
-            log.info(trendingVideo.getTitle());
 
             trendingVideoList.add(trendingVideo);
         }
