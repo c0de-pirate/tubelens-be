@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -29,6 +30,15 @@ public class RefreshTokenService {
 
     public Long getRefreshTokenExpiryMs() {
         return refreshTokenExpiryMs;
+    }
+
+    public Optional<RefreshToken> findByUserId(Long userId) {
+        return refreshTokenRepository.findByUserId(userId);
+    }
+
+    // 토큰의 만료 여부를 확인하는 메서드 (boolean 반환)
+    public boolean isTokenExpired(RefreshToken token) {
+        return token.getExpiryDate().isBefore(Instant.now());
     }
 
     public RefreshToken createRefreshToken(User user) {

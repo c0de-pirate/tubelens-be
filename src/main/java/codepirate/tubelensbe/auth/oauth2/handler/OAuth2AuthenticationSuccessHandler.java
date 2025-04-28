@@ -1,6 +1,5 @@
 package codepirate.tubelensbe.auth.oauth2.handler;
 
-import codepirate.tubelensbe.analytics.GoogleAnalyticsService;
 import codepirate.tubelensbe.user.domain.User;
 import codepirate.tubelensbe.auth.oauth2.service.CustomOAuth2UserService;
 import codepirate.tubelensbe.auth.jwt.JwtTokenProvider;
@@ -23,6 +22,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
@@ -54,22 +54,28 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     @Autowired
     private HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository;
 
-    @Autowired
-    private GoogleAnalyticsService googleAnalyticsService; // GoogleAnalyticsService 주입
-
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         User user = processOAuth2User(oAuth2User,authentication);
 
-        // JWT 액세스 토큰 생성
         String accessToken = jwtTokenProvider.generateToken(
                 new UsernamePasswordAuthenticationToken(user.getName(), null, oAuth2User.getAuthorities()));
+        RefreshToken refreshToken;
 
-        // 리프레시 토큰 생성
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+        Optional<RefreshToken> existingTokenOpt = refreshTokenService.findByUserId(user.getId());
 
-        // 쿠키 대신 URL 파라미터로 토큰 전달
+        if (existingTokenOpt.isPresent()) {
+            RefreshToken existingToken = existingTokenOpt.get();
+            if (!refreshTokenService.isTokenExpired(existingToken)) {
+                refreshToken = existingToken;
+            } else {
+                refreshToken = refreshTokenService.createRefreshToken(user);
+            }
+        } else {
+            refreshToken = refreshTokenService.createRefreshToken(user);
+        }
+
         String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/")
                 .queryParam("token", accessToken)
                 .queryParam("refreshToken", refreshToken.getToken())
