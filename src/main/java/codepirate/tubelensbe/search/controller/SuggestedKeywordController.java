@@ -29,57 +29,45 @@ public class SuggestedKeywordController {
         List<VideoSearchRepository.KeywordGroup> keywordGroups = new ArrayList<>();
 
         // ✅ 1. 접두사(prefix) 검색 결과
-        for (VideoSearchResult result : prefixResults) {
+        prefixResults.forEach(result -> {
             if (seenTitles.add(result.getTitle())) {
-                String title = result.getTitle();
-                List<String> tokens = Arrays.stream(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
-                        .filter(token -> token.length() >= 2 && token.length() <= 5)
-                        .distinct()
-                        .limit(2)
-                        .toList();
-
+                List<String> tokens = extractTokens(result.getTitle(), 2, 5, 2);
                 if (!tokens.isEmpty()) {
-                    keywordGroups.add(new VideoSearchRepository.KeywordGroup(title, tokens));
+                    keywordGroups.add(new VideoSearchRepository.KeywordGroup(result.getTitle(), tokens));
                 }
             }
-        }
+        });
 
-        // ✅ 2. 포함(contains) 검색 결과 (수정 포인트)
-        for (VideoSearchResult result : containsResults) {
+        // ✅ 2. 포함(contains) 검색 결과
+        containsResults.forEach(result -> {
             if (seenTitles.add(result.getTitle())) {
-                String title = result.getTitle();
+                List<String> tokens = extractTokens(result.getTitle(), 2, 10, Integer.MAX_VALUE);
+                if (!tokens.isEmpty()) {
+                    String firstToken = tokens.get(0);
+                    String matchedToken = tokens.stream()
+                            .filter(t -> t.contains(keyword))
+                            .findFirst()
+                            .orElse(null);
 
-                List<String> tokens = Arrays.stream(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
-                        .filter(token -> token.length() >= 2 && token.length() <= 10)
-                        .toList();
+                    if (matchedToken != null) {
+                        List<String> selectedKeywords = firstToken.equals(matchedToken)
+                                ? List.of(firstToken)
+                                : List.of(firstToken, matchedToken);
 
-                if (tokens.isEmpty()) continue;
-
-                String firstToken = tokens.get(0);
-                String matchedToken = null;
-
-                for (String token : tokens) {
-                    if (token.contains(keyword)) {
-                        matchedToken = token;
-                        break;
+                        keywordGroups.add(new VideoSearchRepository.KeywordGroup(result.getTitle(), selectedKeywords));
                     }
-                }
-
-                if (matchedToken != null) {
-                    List<String> selectedKeywords = new ArrayList<>();
-
-                    if (!firstToken.equals(matchedToken)) {
-                        selectedKeywords.add(firstToken);
-                        selectedKeywords.add(matchedToken);
-                    } else {
-                        selectedKeywords.add(firstToken); // 같으면 하나만
-                    }
-
-                    keywordGroups.add(new VideoSearchRepository.KeywordGroup(title, selectedKeywords));
                 }
             }
-        }
+        });
 
         return ResponseEntity.ok(keywordGroups);
+    }
+
+    private List<String> extractTokens(String title, int minLength, int maxLength, int limit) {
+        return Arrays.stream(title.split("\\s+|[^가-힣a-zA-Z0-9]"))
+                .filter(token -> token.length() >= minLength && token.length() <= maxLength)
+                .distinct()
+                .limit(limit)
+                .toList();
     }
 }

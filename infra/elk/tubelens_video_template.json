@@ -1,5 +1,5 @@
 {
-  "index_patterns": ["tubelens_video*"],
+  "index_patterns": ["tubelens_videos*"],
   "template": {
     "settings": {
       "analysis": {

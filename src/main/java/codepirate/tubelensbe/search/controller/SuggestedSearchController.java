@@ -27,34 +27,30 @@ public class SuggestedSearchController {
             return ResponseEntity.badRequest().body(List.of());
         }
 
-        // fuzzy로 먼저 전체 검색
+        // 1. fuzzy 검색
         List<VideoSearchResult> allResults = videoSearchService.searchByInputOrKeywords(input, keywords, fuzzinessLevel);
 
-        // 🔥 완전 일치만 필터링
-        List<VideoSearchResult> perfectMatches = allResults.stream()
+        // 2. 완전 일치 필터
+        Set<String> perfectMatchTitles = allResults.stream()
                 .filter(result -> {
                     String title = result.getTitle();
-                    return title.contains(input) && keywords.stream().allMatch(title::contains);
+                    return title != null && title.contains(input) && keywords.stream().allMatch(title::contains);
                 })
-                .collect(Collectors.toList());
+                .map(VideoSearchResult::getTitle)
+                .collect(Collectors.toSet());
 
-        // 중복 제거
+        // 3. 중복 없이 perfectMatches + 나머지 fuzzy 결과 합치기
         Set<String> seenTitles = new HashSet<>();
         List<VideoSearchResult> combinedResults = new ArrayList<>();
 
-        // perfectMatches 먼저 추가
-        for (VideoSearchResult result : perfectMatches) {
-            if (seenTitles.add(result.getTitle())) {
-                combinedResults.add(result);
-            }
-        }
-
-        // 나머지 fuzzy 결과 추가
-        for (VideoSearchResult result : allResults) {
-            if (seenTitles.add(result.getTitle())) {
-                combinedResults.add(result);
-            }
-        }
+        allResults.stream()
+                .sorted((r1, r2) -> {
+                    boolean r1Perfect = perfectMatchTitles.contains(r1.getTitle());
+                    boolean r2Perfect = perfectMatchTitles.contains(r2.getTitle());
+                    return Boolean.compare(r2Perfect, r1Perfect); // perfectMatch 우선 정렬
+                })
+                .filter(result -> result.getTitle() != null && seenTitles.add(result.getTitle()))
+                .forEach(combinedResults::add);
 
         return ResponseEntity.ok(combinedResults);
     }
