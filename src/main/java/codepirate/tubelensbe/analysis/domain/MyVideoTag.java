@@ -10,18 +10,29 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "my_video_tag")
+@Table(name = "my_video_tag", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"channelId", "tag"})})
 public class MyVideoTag {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
+    private String channelId;
+
+    @Column(nullable = false)
     private String tag;
 
     @Column(nullable = false)
-    private int count;
+    private Integer count;
 
     @Column(nullable = false)
     private LocalDate lastUpdated;
+
+    public MyVideoTag(String channelId, String tag, Integer count, LocalDate lastUpdated) {
+        this.channelId = channelId;
+        this.tag = tag;
+        this.count = count;
+        this.lastUpdated = lastUpdated;
+    }
 }
