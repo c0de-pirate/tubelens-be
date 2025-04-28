@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   elasticsearch:
     build:
@@ -25,6 +27,21 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+
+  init-template:
+    image: curlimages/curl
+    container_name: init-template
+    depends_on:
+      - elasticsearch
+    user: root
+    volumes:
+      - ./init_template.sh:/init_template.sh
+      - ./tubelens_video_template.json:/tubelens_video_template.json
+    networks:
+      - elk-network
+    entrypoint: [ "sh", "-c", "chmod +x /init_template.sh && /init_template.sh" ]
+
+
 
   logstash:
     user: root
@@ -78,7 +95,3 @@ services:
 networks:
   elk-network:
     driver: bridge
-
-volumes:
-  esdata:
-  logstash_data: # <-- 이렇게 정의하면 elk_logstash_data 로 생성됨
