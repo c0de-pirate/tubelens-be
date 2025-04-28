@@ -1,4 +1,4 @@
-package codepirate.tubelensbe.video.repository;
+package codepirate.tubelensbe.video.repository.elasticsearch;
 
 import codepirate.tubelensbe.video.domain.ESVideo;
 import org.springframework.stereotype.Repository;
