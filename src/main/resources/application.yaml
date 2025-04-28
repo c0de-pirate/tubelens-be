@@ -1,9 +1,17 @@
 spring:
   profiles:
-    active: dev
-
+    active: private
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
   application:
     name: tubelens
-    
-server:
-  port: 8080
+
+  elasticsearch:
+    uris: http://localhost:9200/
+
+logging:
+  level:
+    root: INFO
+    codepirate.tubelensbe: DEBUG  # 당신의 패키지에 맞게 수정하세요
+    org.springframework.web: INFO

@@ -74,8 +74,6 @@ cmake-build-*/
 
 # IntelliJ
 out/
-*.iml
-.idea/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -122,10 +120,6 @@ fabric.properties
 .idea/**/markdown-navigator.xml
 .idea/**/markdown-navigator-enh.xml
 .idea/**/markdown-navigator/
-
-# docker infra ingore file list
-infra/elk/elasticsearch/data
-infra/elk/.env
 
 # Cache file creation bug
 # See https://youtrack.jetbrains.com/issue/JBR-2257
@@ -225,7 +219,8 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
-# application-dev.yml 제외
-src/main/resources/application-dev.yml
+src/main/resources/application-private.yml
+application-private.yml
 
-
+infra/elk/elasticsearch/data
+.idea/
