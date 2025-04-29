@@ -1,4 +1,5 @@
 set -e
+set -x
 
 echo "Waiting for Elasticsearch to be ready..."
 

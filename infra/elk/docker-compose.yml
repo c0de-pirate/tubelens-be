@@ -91,6 +91,14 @@ services:
     networks:
       - elk-network
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+
 networks:
   elk-network:
     driver: bridge
