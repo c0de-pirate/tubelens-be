@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -51,13 +52,16 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String googleRedirectUri;
 
+    @Value("{server.react.port}")
+    private String port;
+
     @Autowired
     private HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-        User user = processOAuth2User(oAuth2User,authentication);
+        User user = processOAuth2User(oAuth2User, authentication);
 
         String accessToken = jwtTokenProvider.generateToken(
                 new UsernamePasswordAuthenticationToken(user.getName(), null, oAuth2User.getAuthorities()));
@@ -76,7 +80,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             refreshToken = refreshTokenService.createRefreshToken(user);
         }
 
-        String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/")
+        String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:" + port +"/")
                 .queryParam("token", accessToken)
                 .queryParam("refreshToken", refreshToken.getToken())
                 .build().toUriString();
@@ -118,6 +122,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         String accessToken = null;
         String refreshToken = null;
 
+        // OAuth2AuthenticationToken일 경우의 처리
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
             OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
@@ -131,6 +136,12 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                     refreshToken = client.getRefreshToken().getTokenValue();
                 }
             }
+        }
+        // UsernamePasswordAuthenticationToken일 경우의 처리 (JWT 로그인)
+        else if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            // JWT 로그인의 경우 이미 인증이 완료되었으므로 현재 컨텍스트에서 토큰을 가져옴
+            accessToken = SecurityContextHolder.getContext().getAuthentication().getCredentials() != null ?
+                    SecurityContextHolder.getContext().getAuthentication().getCredentials().toString() : null;
         }
 
         // 채널 ID 가져오기 및 설정
