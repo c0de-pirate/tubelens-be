@@ -14,7 +14,7 @@ import java.util.List;
 import java.io.IOException;
 import java.util.Optional;
 
-
+@CrossOrigin(origins = "http://localhost:3000")
 @Controller
 @RequestMapping("/videos")
 public class TrendingVideoController {
