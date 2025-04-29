@@ -13,10 +13,15 @@ import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.VideoListResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,5 +90,54 @@ public class TrendingVideoService {
         }
 
         return videoList;
+    }
+
+    // 날짜 제한 없이 조회수 기준 상위 N개
+    public List<TrendingVideo> getTopVideosByViews(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return trendingVideoRepository.findByOrderByViewCountDesc(pageable);
+
+    }
+
+    // 날짜 제한 없이 좋아요 기준 상위 N개
+    public List<TrendingVideo> getTopVideosByLikes(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return trendingVideoRepository.findByOrderByLikeCountDesc(pageable);
+    }
+
+    // 오늘 기준 조회수 상위 N개
+    public List<TrendingVideo> getTodayTopVideosByViews(int limit) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59);
+
+        Pageable pageable = PageRequest.of(0, limit);
+        return trendingVideoRepository.findByUpdated_atBetweenOrderByViewCountDesc(
+                startOfDay, endOfDay, pageable);
+    }
+
+    // 오늘 기준 좋아요 상위 N개
+    public List<TrendingVideo> getTodayTopVideosByLikes(int limit) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59);
+
+        Pageable pageable = PageRequest.of(0, limit);
+        return trendingVideoRepository.findByUpdated_atBetweenOrderByLikeCountDesc(
+                startOfDay, endOfDay, pageable);
+    }
+
+    // 특정 기간 내 조회수 상위 N개
+    public List<TrendingVideo> getTopVideosByViewsInPeriod(
+            LocalDateTime startDate, LocalDateTime endDate, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return trendingVideoRepository.findByUpdated_atBetweenOrderByViewCountDesc(
+                startDate, endDate, pageable);
+    }
+
+    // 특정 기간 내 좋아요 상위 N개
+    public List<TrendingVideo> getTopVideosByLikesInPeriod(
+            LocalDateTime startDate, LocalDateTime endDate, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return trendingVideoRepository.findByUpdated_atBetweenOrderByLikeCountDesc(
+                startDate, endDate, pageable);
     }
 }

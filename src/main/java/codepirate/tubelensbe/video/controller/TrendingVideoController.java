@@ -1,6 +1,5 @@
 package codepirate.tubelensbe.video.controller;
 
-import codepirate.tubelensbe.video.domain.ESVideo;
 import codepirate.tubelensbe.video.domain.TrendingVideo;
 import codepirate.tubelensbe.video.service.TrendingVideoService;
 import org.slf4j.Logger;
@@ -35,13 +34,26 @@ public class TrendingVideoController {
         return trendingVideoService.getVideo(idlist);
     }
 
-    @GetMapping("/recomm")
-    @ResponseBody
-    public List<TrendingVideo> videoInsert(@RequestParam String videoId) throws IOException {
-        List<String> idlist = new ArrayList<>();
-        idlist.add(videoId);
+    @GetMapping("/trending/likes")
+    public List<TrendingVideo> getTrendingVideosByLikes(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String period
+    ) {
+        if ("today".equals(period)) {
+            return trendingVideoService.getTodayTopVideosByLikes(limit);
+        }
+        return trendingVideoService.getTopVideosByLikes(limit);
+    }
 
-        return trendingVideoService.recommVideos(idlist);
+    @GetMapping("/trending/views")
+    public List<TrendingVideo> getTrendingVideosByViews(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String period
+    ) {
+        if ("today".equals(period)) {
+            return trendingVideoService.getTodayTopVideosByViews(limit);
+        }
+        return trendingVideoService.getTopVideosByViews(limit);
     }
 }
 
