@@ -20,31 +20,39 @@ public class TrendingVideo {
     @Id
     private String id;
 
+    @Column(name = "title")
     private String title;
 
+    @Column(name = "thumbnails")
     private String thumbnails;
 
-    private String embedHtml ;
+    @Column(name = "embed_html")
+    private String embedHtml;
 
     @Column(name = "published_at")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ssX", timezone = "UTC")
     private OffsetDateTime publishedAt;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
-    private String description ;
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
 
-    private String channelTitle ;
+    @Column(name = "channel_title")
+    private String channelTitle;
 
-    private Long viewCount ;
-    
-    private Long likeCount ;
-    
-    private Long commentCount ;
+    @Column(name = "view_count")
+    private Long viewCount;
+
+    @Column(name = "like_count")
+    private Long likeCount;
+
+    @Column(name = "comment_count")
+    private Long commentCount;
 
     @ElementCollection
     private List<String> tags;
 
     @UpdateTimestamp
-    private LocalDateTime updated_at;
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

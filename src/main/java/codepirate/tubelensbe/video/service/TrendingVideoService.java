@@ -96,7 +96,6 @@ public class TrendingVideoService {
     public List<TrendingVideo> getTopVideosByViews(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         return trendingVideoRepository.findByOrderByViewCountDesc(pageable);
-
     }
 
     // 날짜 제한 없이 좋아요 기준 상위 N개
@@ -111,7 +110,7 @@ public class TrendingVideoService {
         LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59);
 
         Pageable pageable = PageRequest.of(0, limit);
-        return trendingVideoRepository.findByUpdated_atBetweenOrderByViewCountDesc(
+        return trendingVideoRepository.findByUpdatedAtBetweenOrderByViewCountDesc(
                 startOfDay, endOfDay, pageable);
     }
 
@@ -121,7 +120,7 @@ public class TrendingVideoService {
         LocalDateTime endOfDay = LocalDate.now().atTime(23, 59, 59);
 
         Pageable pageable = PageRequest.of(0, limit);
-        return trendingVideoRepository.findByUpdated_atBetweenOrderByLikeCountDesc(
+        return trendingVideoRepository.findByUpdatedAtBetweenOrderByLikeCountDesc(
                 startOfDay, endOfDay, pageable);
     }
 
@@ -129,7 +128,7 @@ public class TrendingVideoService {
     public List<TrendingVideo> getTopVideosByViewsInPeriod(
             LocalDateTime startDate, LocalDateTime endDate, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        return trendingVideoRepository.findByUpdated_atBetweenOrderByViewCountDesc(
+        return trendingVideoRepository.findByUpdatedAtBetweenOrderByViewCountDesc(
                 startDate, endDate, pageable);
     }
 
@@ -137,7 +136,7 @@ public class TrendingVideoService {
     public List<TrendingVideo> getTopVideosByLikesInPeriod(
             LocalDateTime startDate, LocalDateTime endDate, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
-        return trendingVideoRepository.findByUpdated_atBetweenOrderByLikeCountDesc(
+        return trendingVideoRepository.findByUpdatedAtBetweenOrderByLikeCountDesc(
                 startDate, endDate, pageable);
     }
 }

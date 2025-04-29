@@ -16,8 +16,8 @@ public interface TrendingVideoRepository extends JpaRepository<TrendingVideo, St
     List<TrendingVideo> findByOrderByLikeCountDesc(Pageable pageable);
 
     // 날짜 범위가 있는 조회 메서드
-    List<TrendingVideo> findByUpdated_atBetweenOrderByViewCountDesc(
+    List<TrendingVideo> findByUpdatedAtBetweenOrderByViewCountDesc(
             LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
-    List<TrendingVideo> findByUpdated_atBetweenOrderByLikeCountDesc(
+    List<TrendingVideo> findByUpdatedAtBetweenOrderByLikeCountDesc(
             LocalDateTime startDate, LocalDateTime endDate, Pageable pageable);
 }

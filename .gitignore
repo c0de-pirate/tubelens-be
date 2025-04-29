@@ -226,7 +226,8 @@ gradle-app.setting
 *.hprof
 
 # application-dev.yml 제외
-src/main/resources/application-dev.yaml
+src/main/resources/application-dev.yml
+src/main/resources/application-private.yml
 
 #elasticsearch data제외
 **/elasticsearch/data/**
