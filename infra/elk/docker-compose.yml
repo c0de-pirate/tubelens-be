@@ -66,7 +66,7 @@ services:
       - ./logstash_data:/var/lib/logstash
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./mysql-connector-j-9.1.0.jar:/usr/share/logstash/tools/mysql-connector-j-9.1.0.jar
-      - logstash_data:/var/lib/logstash # <-- 최종적으로 이렇게 설정
+#      - logstash_data:/var/lib/logstash # <-- 최종적으로 이렇게 설정
     command: "logstash -f /usr/share/logstash/pipeline/logstash.conf"
 
   kibana:
@@ -91,6 +91,14 @@ services:
       - "8000:8000"
     networks:
       - elk-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
 
 networks:
   elk-network:
