@@ -42,7 +42,6 @@ services:
     entrypoint: [ "sh", "-c", "chmod +x /init_template.sh && /init_template.sh" ]
 
 
-
   logstash:
     user: root
     build:

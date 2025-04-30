@@ -39,9 +39,9 @@ public class TrendingVideo {
     private String channelTitle ;
 
     private Long viewCount ;
-    
+
     private Long likeCount ;
-    
+
     private Long commentCount ;
 
     @ElementCollection
