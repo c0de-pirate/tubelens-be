@@ -1,7 +1,10 @@
 package codepirate.tubelensbe.search.dto;
 
+import lombok.Getter;
+
 import java.util.List;
 
+@Getter
 public class KeywordGroup {
     public String title;
     public List<String> keywords;

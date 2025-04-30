@@ -14,16 +14,16 @@ import java.util.stream.Collectors;
 import static codepirate.tubelensbe.search.util.StringTokenUtil.extractTokens;
 
 @RestController
-@RequestMapping("/youtube")
 @RequiredArgsConstructor
+@RequestMapping("/youtube")
 public class SuggestedKeywordController {
 
     private final SuggestedKeywordService suggestedKeywordService;
 
-    @GetMapping("/suggestion")
-    public ResponseEntity<List<KeywordGroup>> getStructuredKeywordGroups(
+    @GetMapping("suggestion")
+    public ResponseEntity<List<KeywordGroup>> getSuggestedKeywords(
             @RequestParam String keyword,
-            @RequestParam(defaultValue = "AUTO") String fuzzinessLevel) {
+            @RequestParam(required = false, defaultValue = "low") String fuzzinessLevel) {
 
         List<KeywordGroup> keywordGroups = suggestedKeywordService.getStructuredKeywordGroups(keyword, fuzzinessLevel);
         return ResponseEntity.ok(keywordGroups);
