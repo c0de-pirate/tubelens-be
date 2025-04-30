@@ -24,25 +24,9 @@ public class VideoSearchRepository {
 
     public List<VideoSearchResult> searchByKeyword(String keyword, String fuzzinessLevel) {
         try {
-            SearchResponse<SearchVideo> exactMatchResponse = elasticsearchClient.search(s -> s
-                            .index("tubelens_videos")
-                            .query(q -> q.bool(b -> b
-                                    .should(sh -> sh.matchPhrase(mp -> mp.field("title.ko").query(keyword)))
-                                    .should(sh -> sh.matchPhrase(mp -> mp.field("title.en").query(keyword)))
-                                    .minimumShouldMatch("1")
-                            ))
-                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    SearchVideo.class);
+            SearchResponse<SearchVideo> exactMatchResponse = elasticsearchClient.search(s -> s.index("tubelens_videos").query(q -> q.bool(b -> b.should(sh -> sh.matchPhrase(mp -> mp.field("title.ko").query(keyword))).should(sh -> sh.matchPhrase(mp -> mp.field("title.en").query(keyword))).minimumShouldMatch("1"))).sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))), SearchVideo.class);
 
-            SearchResponse<SearchVideo> fuzzyMatchResponse = elasticsearchClient.search(s -> s
-                            .index("tubelens_videos")
-                            .query(q -> q.bool(b -> b
-                                    .should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel)))
-                                    .should(sh -> sh.match(m -> m.field("title.en").query(keyword).fuzziness(fuzzinessLevel)))
-                                    .minimumShouldMatch("1")
-                            ))
-                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    SearchVideo.class);
+            SearchResponse<SearchVideo> fuzzyMatchResponse = elasticsearchClient.search(s -> s.index("tubelens_videos").query(q -> q.bool(b -> b.should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel))).should(sh -> sh.match(m -> m.field("title.en").query(keyword).fuzziness(fuzzinessLevel))).minimumShouldMatch("1"))).sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))), SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
@@ -60,15 +44,7 @@ public class VideoSearchRepository {
 
     public List<VideoSearchResult> searchByPrefix(String keyword) {
         try {
-            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_videos")
-                            .query(q -> q.bool(b -> b
-                                    .should(sh -> sh.prefix(p -> p.field("title.ko").value(keyword))).boost(2.0f)
-                                    .should(sh -> sh.prefix(p -> p.field("title.en").value(keyword))).boost(2.0f)
-                                    .minimumShouldMatch("1")
-                            ))
-                            .sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))),
-                    SearchVideo.class);
+            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s.index("tubelens_videos").query(q -> q.bool(b -> b.should(sh -> sh.prefix(p -> p.field("title.ko").value(keyword))).boost(2.0f).should(sh -> sh.prefix(p -> p.field("title.en").value(keyword))).boost(2.0f).minimumShouldMatch("1"))).sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))), SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
@@ -78,9 +54,7 @@ public class VideoSearchRepository {
                 if (video != null && video.getTitle() != null && seenTitles.add(video.getTitle())) {
                     String normalizedTitle = video.getTitle().toLowerCase().replaceAll("[^a-z0-9가-힣]", " ");
                     String normalizedKeyword = keyword.toLowerCase();
-                    String firstToken = Arrays.stream(normalizedTitle.split("\\s+"))
-                            .findFirst()
-                            .orElse("");
+                    String firstToken = Arrays.stream(normalizedTitle.split("\\s+")).findFirst().orElse("");
                     if (firstToken.startsWith(normalizedKeyword)) {
                         results.add(mapToResult(video));
                     }
@@ -95,58 +69,9 @@ public class VideoSearchRepository {
         }
     }
 
-    public List<VideoSearchResult> searchByAllKeywordsInTitle(List<String> keywords) {
-        try {
-            if (keywords == null || keywords.isEmpty()) {
-                return List.of();
-            }
-
-            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_videos")
-                            .query(q -> q.bool(b -> {
-                                for (String keyword : keywords) {
-                                    b.must(m -> m
-                                            .matchPhrase(mp -> mp
-                                                    .field("title.ko")
-                                                    .query(keyword)
-                                                    .boost(2.0f)
-                                            )
-                                    );
-                                }
-                                return b;
-                            })),
-                    SearchVideo.class);
-
-            Set<String> seenTitles = new HashSet<>();
-            List<VideoSearchResult> results = new ArrayList<>();
-
-            addUniqueResults(response, seenTitles, results);
-
-            return results;
-
-        } catch (IOException e) {
-            log.error("모든 키워드 포함 검색 중 오류 발생: {}", e.getMessage(), e);
-            return List.of();
-        }
-    }
-
     public List<VideoSearchResult> searchByContains(String keyword) {
         try {
-            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_videos")
-                            .query(q -> q.match(m -> m
-                                    .field("title.ko")
-                                    .query(keyword)
-                                    .operator(Operator.And)
-                            ))
-                            .sort(so -> so
-                                    .field(f -> f
-                                            .field("view_count")
-                                            .order(SortOrder.Desc)
-                                    )
-                            )
-                            .size(50),
-                    SearchVideo.class);
+            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s.index("tubelens_videos").query(q -> q.match(m -> m.field("title.ko").query(keyword).operator(Operator.And))).sort(so -> so.field(f -> f.field("view_count").order(SortOrder.Desc))).size(50), SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
@@ -163,31 +88,14 @@ public class VideoSearchRepository {
 
     public List<VideoSearchResult> searchByInputOrKeywords(String input, List<String> keywords, String fuzzinessLevel) {
         try {
-            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s
-                            .index("tubelens_videos")
-                            .query(q -> q.bool(b -> {
-                                for (String keyword : keywords) {
-                                    b.should(sh -> sh.match(m -> m
-                                            .field("title.ko")
-                                            .query(keyword)
-                                            .fuzziness(fuzzinessLevel)
-                                    ));
-                                }
-                                b.should(sh -> sh.match(m -> m
-                                        .field("title.ko")
-                                        .query(input)
-                                        .fuzziness(fuzzinessLevel)
-                                ));
-                                b.minimumShouldMatch("1");
-                                return b;
-                            }))
-                            .sort(so -> so
-                                    .field(f -> f
-                                            .field("_score")
-                                            .order(SortOrder.Desc)
-                                    )
-                            ),
-                    SearchVideo.class);
+            SearchResponse<SearchVideo> response = elasticsearchClient.search(s -> s.index("tubelens_videos").query(q -> q.bool(b -> {
+                for (String keyword : keywords) {
+                    b.should(sh -> sh.match(m -> m.field("title.ko").query(keyword).fuzziness(fuzzinessLevel)));
+                }
+                b.should(sh -> sh.match(m -> m.field("title.ko").query(input).fuzziness(fuzzinessLevel)));
+                b.minimumShouldMatch("1");
+                return b;
+            })).sort(so -> so.field(f -> f.field("_score").order(SortOrder.Desc))), SearchVideo.class);
 
             Set<String> seenTitles = new HashSet<>();
             List<VideoSearchResult> results = new ArrayList<>();
@@ -201,7 +109,6 @@ public class VideoSearchRepository {
             return List.of();
         }
     }
-
 
 
     private void addUniqueResults(SearchResponse<SearchVideo> response, Set<String> seenTitles, List<VideoSearchResult> results) {
@@ -224,13 +131,4 @@ public class VideoSearchRepository {
         return result;
     }
 
-    public static class KeywordGroup {
-        public String title;
-        public List<String> keywords;
-
-        public KeywordGroup(String title, List<String> keywords) {
-            this.title = title;
-            this.keywords = keywords;
-        }
-    }
 }
