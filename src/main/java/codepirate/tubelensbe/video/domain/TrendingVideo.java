@@ -3,9 +3,7 @@ package codepirate.tubelensbe.video.domain;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.google.api.client.util.DateTime;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -14,6 +12,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 @Getter
 @Setter
