@@ -47,7 +47,6 @@ public class TrendingVideoService {
     }
 
     public List<TrendingVideo> recommVideos(List<String> id) throws IOException {
-        //제목 추출 후 repository로
         JsonFactory jsonFactory = new JacksonFactory();
 
         YouTube youtube = new YouTube.Builder(
@@ -68,20 +67,22 @@ public class TrendingVideoService {
 
         List<TrendingVideo> videoList = new ArrayList<>();
         for (ESVideo esVideo : ESVideoList) {
-            TrendingVideo v = new TrendingVideo();
+//            TrendingVideo v = new TrendingVideo();
 
-            v.setId(esVideo.getId());
-            v.setTitle(esVideo.getTitle());
-            v.setThumbnails(esVideo.getThumbnails());
-            v.setEmbedHtml(esVideo.getEmbedHtml());
-            v.setPublishedAt(OffsetDateTime.parse(esVideo.getPublisedAt()));
-            v.setDescription(esVideo.getDescription());
-            v.setChannelTitle(esVideo.getChannelTitle());
-            v.setViewCount(esVideo.getViewCount());
-            v.setLikeCount(esVideo.getLikeCount());
-            v.setCommentCount(esVideo.getCommentCount());
+            TrendingVideo trendingVideo = TrendingVideo.builder()
+                    .id(esVideo.getId())
+                    .title(esVideo.getTitle())
+                    .thumbnails(esVideo.getEmbedHtml())
+                    .embedHtml(esVideo.getEmbedHtml())
+                    .publishedAt(OffsetDateTime.parse(esVideo.getPublisedAt()))
+                    .description(esVideo.getDescription())
+                    .channelTitle(esVideo.getChannelTitle())
+                    .viewCount(esVideo.getViewCount())
+                    .likeCount(esVideo.getLikeCount())
+                    .commentCount(esVideo.getCommentCount())
+                    .build();
 
-            videoList.add(v);
+            videoList.add(trendingVideo);
         }
 
         return videoList;
