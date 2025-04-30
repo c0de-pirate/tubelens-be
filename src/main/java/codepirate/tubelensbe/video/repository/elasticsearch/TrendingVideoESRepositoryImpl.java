@@ -21,14 +21,10 @@ import java.util.Map;
 @Repository
 public class TrendingVideoESRepositoryImpl implements TrendingVideoESRepository {
 
-    private static final Logger log = LoggerFactory.getLogger(ApiService.class);
-
     private final ElasticsearchOperations elasticsearchOperations;
-    private final ObjectMapper objectMapper;
 
-    public TrendingVideoESRepositoryImpl(ElasticsearchOperations elasticsearchOperations, ObjectMapper objectMapper) {
+    public TrendingVideoESRepositoryImpl(ElasticsearchOperations elasticsearchOperations) {
         this.elasticsearchOperations = elasticsearchOperations;
-        this.objectMapper = objectMapper;
     }
 
     public List<ESVideo> recommendVideosByTitleVectors(String videoid) {
