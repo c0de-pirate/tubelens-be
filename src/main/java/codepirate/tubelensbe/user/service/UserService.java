@@ -5,17 +5,17 @@ import codepirate.tubelensbe.auth.common.Authority;
 import codepirate.tubelensbe.user.domain.User;
 import codepirate.tubelensbe.user.exception.YouTubeApiException;
 import codepirate.tubelensbe.user.repository.UserRepository;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.auth.oauth2.BearerToken;
+import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.ChannelListResponse;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,10 +43,10 @@ public class UserService {
     private final static Logger Log = LoggerFactory.getLogger(TubelensBeApplication.class);
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
-    private final String clientId;
+    private String clientId;
 
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
-    private final String clientSecret;
+    private String clientSecret;
 
     private final UserRepository userRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
@@ -84,7 +84,7 @@ public class UserService {
 
     //youtube api v3 호출
     private Map<String, Object> processExistingUser(User user, OAuth2TokenInfo tokenInfo) {
-        fetchAndSetChannelId(user,tokenInfo);
+        fetchAndSetChannelId(user, tokenInfo);
 
         if (user.getHire_date() == null) {
             user.setHire_date(new java.util.Date());
@@ -106,7 +106,7 @@ public class UserService {
                 Authority.ROLE_USER
         );
 
-        fetchAndSetChannelId(user,tokenInfo);
+        fetchAndSetChannelId(user, tokenInfo);
 
         return convertUserToMap(user);
     }
@@ -149,15 +149,19 @@ public class UserService {
     }
 
     private YouTube getYoutubeClient(String accessToken, String refreshToken) throws GeneralSecurityException, IOException {
-        GoogleCredential credential = new GoogleCredential.Builder()
-                .setTransport(GoogleNetHttpTransport.newTrustedTransport())
-                .setJsonFactory(JacksonFactory.getDefaultInstance())
-                .setClientSecrets(clientId, clientSecret)
-                .build()
-                .setAccessToken(accessToken)
-                .setRefreshToken(refreshToken);
+        HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
-        return new YouTube.Builder(credential.getTransport(), credential.getJsonFactory(), credential)
+        // OAuth2Credentials 사용
+        Credential credential = new Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
+                .setTransport(httpTransport)
+                .setJsonFactory(jsonFactory)
+                .build();
+
+        credential.setAccessToken(accessToken);
+        credential.setRefreshToken(refreshToken);
+
+        return new YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName("TubelensBeApplication")
                 .build();
     }
@@ -178,10 +182,10 @@ public class UserService {
             }
         } catch (IOException e) {
             log.error("""
-                YouTube API 호출 중 오류가 발생했습니다:
-                메시지: {}
-                액세스 토큰: {}
-                """, e.getMessage(), accessToken);
+                    YouTube API 호출 중 오류가 발생했습니다:
+                    메시지: {}
+                    액세스 토큰: {}
+                    """, e.getMessage(), accessToken);
             throw new YouTubeApiException("YouTube API에 접근할 수 없습니다", e);
         } catch (GeneralSecurityException e) {
             log.error("YouTube API 보안 오류: {}", e.getMessage(), e);
@@ -231,5 +235,6 @@ public class UserService {
     }
 
 
-    private record OAuth2TokenInfo(String accessToken, String refreshToken) {}
+    private record OAuth2TokenInfo(String accessToken, String refreshToken) {
+    }
 }
