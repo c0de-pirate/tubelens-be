@@ -51,6 +51,9 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String googleRedirectUri;
 
+    @Value("${server.react.port}")
+    private String port;
+
     @Autowired
     private HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository;
 
@@ -76,7 +79,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             refreshToken = refreshTokenService.createRefreshToken(user);
         }
 
-        String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/")
+        String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:" + port + "/")
                 .queryParam("token", accessToken)
                 .queryParam("refreshToken", refreshToken.getToken())
                 .build().toUriString();
@@ -138,7 +141,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
             try {
                 String channelId = userService.fetchMyChannelId(accessToken, refreshToken);
                 if (channelId != null && !channelId.isEmpty()) {
-                    user.setChannel_id(channelId);
+                    user.setChannelId(channelId);
                     user = userRepository.save(user);
                 }
             } catch (Exception e) {

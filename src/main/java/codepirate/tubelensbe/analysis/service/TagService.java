@@ -45,7 +45,7 @@ public class TagService {
             accessToken = accessToken.substring(7);
         }
 
-        List<String> tags = youTubeAPiClient.fetchAllTags(channelId, accessToken, refreshToken);
+        List<String> tags = youTubeAPiClient.fetchAllTags(channelId);
 
         Map<String, Integer> tagCounts = new HashMap<>();
         for (String tag : tags) {

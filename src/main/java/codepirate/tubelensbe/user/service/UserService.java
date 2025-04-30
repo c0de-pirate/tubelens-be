@@ -1,6 +1,8 @@
 package codepirate.tubelensbe.user.service;
 
 import codepirate.tubelensbe.auth.common.Authority;
+import codepirate.tubelensbe.auth.refreshtoken.RefreshToken;
+import codepirate.tubelensbe.auth.refreshtoken.RefreshTokenRepository;
 import codepirate.tubelensbe.user.domain.User;
 import codepirate.tubelensbe.user.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
@@ -35,11 +37,13 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, OAuth2AuthorizedClientService authorizedClientService) {
+    public UserService(UserRepository userRepository, OAuth2AuthorizedClientService authorizedClientService,RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.authorizedClientService = authorizedClientService;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public Optional<User> findByGoogleId(String googleId) {
@@ -48,6 +52,18 @@ public class UserService {
 
     public Optional<User> findByName(String name) {
         return userRepository.findByName(name);
+    }
+
+    public String findByChannelId(String refreshToken) {
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken);
+        User user = tokenEntity.getUser();  // RefreshToken -> User
+        String channelId = user.getChannelId();  // User -> channelId
+
+        if (channelId == null) {
+            throw new IllegalStateException("사용자에 채널 ID가 등록되어 있지 않습니다.");
+        }
+
+        return channelId;
     }
 
     public Map<String, Object> processOAuth2User(OAuth2AuthenticationToken oauthToken, OAuth2User oauth2User) {
@@ -80,11 +96,11 @@ public class UserService {
 
     //youtube api v3 호출
     private Map<String, Object> processExistingUser(User user, OAuth2TokenInfo tokenInfo) {
-        if ((user.getChannel_id() == null || user.getChannel_id().isEmpty()) && tokenInfo.accessToken != null) {
+        if ((user.getChannelId() == null || user.getChannelId().isEmpty()) && tokenInfo.accessToken != null) {
             try {
                 String channelId = fetchMyChannelId(tokenInfo.accessToken, tokenInfo.refreshToken);
                 if (channelId != null && !channelId.isEmpty()) {
-                    user.setChannel_id(channelId);
+                    user.setChannelId(channelId);
                     userRepository.save(user);
                 }
             } catch (Exception e) {
@@ -118,7 +134,7 @@ public class UserService {
             try {
                 String channelId = fetchMyChannelId(tokenInfo.accessToken, tokenInfo.refreshToken);
                 if (channelId != null && !channelId.isEmpty()) {
-                    user.setChannel_id(channelId);
+                    user.setChannelId(channelId);
                     userRepository.save(user);
                 }
             } catch (Exception e) {
@@ -161,7 +177,7 @@ public class UserService {
         }
         userInfo.put("picture", pictureUrl);
         userInfo.put("googleId", user.getGoogleId());
-        userInfo.put("channel_id", user.getChannel_id()); // 채널 ID 추가
+        userInfo.put("channel_id", user.getChannelId()); // 채널 ID 추가
         userInfo.put("hire_date", user.getHire_date()); // 가입일 추가
         return userInfo;
     }

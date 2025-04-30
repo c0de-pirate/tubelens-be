@@ -7,7 +7,7 @@ import java.util.Optional;
 
 @Repository
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
-    Optional<RefreshToken> findByToken(String token);
+    RefreshToken findByToken(String token);
     Optional<RefreshToken> findByUserId(Long userId);
     // 필요에 따라 사용자 ID로 토큰을 찾는 메서드 추가 가능
 }

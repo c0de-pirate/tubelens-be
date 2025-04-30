@@ -2,30 +2,32 @@ package codepirate.tubelensbe.analysis.controller;
 
 import codepirate.tubelensbe.analysis.dto.TagDto;
 import codepirate.tubelensbe.analysis.service.TagService;
+import codepirate.tubelensbe.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.List;
-
+@RequestMapping("/mypage")
 @RestController
 @RequiredArgsConstructor
 public class MyVideoTagController {
     private final TagService tagService;
+    private final UserService userService;
 
-    @PostMapping("/refresh/{channelId}")
-    public List<TagDto> refreshTags(@PathVariable("channelId") String channelId, @RequestHeader("Authorization") String accessToken,
+    @PostMapping("/refresh")
+    public List<TagDto> refreshTags(@RequestHeader("Authorization") String token,
                            @RequestHeader("refreshToken") String refreshToken) throws GeneralSecurityException, IOException {
-        tagService.refreshTags(channelId, accessToken, refreshToken);
-        return tagService.getTags(channelId, accessToken, refreshToken);
+        String channelId = userService.findByChannelId(refreshToken);
+        return tagService.refreshTags(channelId, token, refreshToken);
     }
 
-    @GetMapping("/{channelId}")
-    public List<TagDto> getTags(@PathVariable("channelId") String channelId,
-                                @RequestHeader("Authorization") String accessToken,
+    @GetMapping
+    public List<TagDto> getTags(@RequestHeader("Authorization") String token,
                                 @RequestHeader("refreshToken") String refreshToken) throws GeneralSecurityException, IOException {
-        return tagService.getTags(channelId, accessToken, refreshToken);
+        String channelId = userService.findByChannelId(refreshToken);
+        return tagService.getTags(channelId, token, refreshToken);
     }
 
 }

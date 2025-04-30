@@ -52,8 +52,7 @@ public class RefreshTokenService {
     }
 
     public RefreshToken findByToken(String token) {
-        return refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new TokenRefreshException("Invalid refresh token: " + token));
+        return refreshTokenRepository.findByToken(token);
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {
