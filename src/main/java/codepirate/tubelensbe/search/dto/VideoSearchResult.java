@@ -1,10 +1,10 @@
 package codepirate.tubelensbe.search.dto;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 public class VideoSearchResult {
     private String id;
     private String title;
