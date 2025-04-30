@@ -68,6 +68,8 @@ cmake-build-*/
 
 # Mongo Explorer plugin
 .idea/**/mongoSettings.xml
+.idea/compiler.xml
+.idea/misc.xml
 
 # File-based project format
 *.iws
@@ -226,7 +228,7 @@ gradle-app.setting
 *.hprof
 
 # application-dev.yml 제외
-src/main/resources/application-dev.yaml
+src/main/resources/application-dev.yml
 
 #elasticsearch data제외
 **/elasticsearch/data/**
