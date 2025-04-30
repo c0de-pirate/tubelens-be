@@ -35,7 +35,7 @@ public class User {
     private java.util.Date hire_date;   // 가입일/입사일
 
     @Column(nullable = true)
-    private String channel_id;  // YouTube 채널 ID
+    private String channelId;  // YouTube 채널 ID
 
     @Column(nullable = true)
     private String etc;
@@ -63,7 +63,7 @@ public class User {
         this.picture = picture;
         this.gender = gender;
         this.hire_date = hire_date;
-        this.channel_id = channel_id;
+        this.channelId = channel_id;
         this.etc = etc;
         this.authority = authority;
     }

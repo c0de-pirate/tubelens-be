@@ -1,0 +1,12 @@
+ARG ELK_VERSION
+FROM docker.elastic.co/logstash/logstash:${ELK_VERSION}
+
+USER root
+RUN mkdir -p /var/lib/logstash/queue && \
+    chown -R logstash:logstash /var/lib/logstash && \
+    chmod -R 777 /var/lib/logstash
+
+# http_poller 플러그인 설치
+RUN logstash-plugin install logstash-input-http_poller
+
+USER logstash

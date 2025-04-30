@@ -6,14 +6,14 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        ELK_VERSION: ${ELK_VERSION}  # .env에서 읽은 환경변수 전달
+        ELK_VERSION: ${ELK_VERSION}
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - ES_JAVA_OPTS=${ES_JAVA_OPTS}
       - xpack.security.enabled=false
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTICSEARCH_PLUGINS=analysis-nori  # 플러그인 설치 명시
+      - ELASTICSEARCH_PLUGINS=analysis-nori
     volumes:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
       - ./elasticsearch/data:/usr/share/elasticsearch/data
@@ -28,20 +28,43 @@ services:
       timeout: 10s
       retries: 5
 
+  init-template:
+    image: curlimages/curl
+    container_name: init-template
+    depends_on:
+      - elasticsearch
+    user: root
+    volumes:
+      - ./init_template.sh:/init_template.sh
+      - ./tubelens_video_template.json:/tubelens_video_template.json
+    networks:
+      - elk-network
+    entrypoint: [ "sh", "-c", "chmod +x /init_template.sh && /init_template.sh" ]
+
+
   logstash:
-    image: logstash:${ELK_VERSION}
-    container_name: logstash
+    user: root
+    build:
+      context: .
+      dockerfile: Dockerfile.logstash
+      args:
+        ELK_VERSION: ${ELK_VERSION}
+        image: logstash:${ELK_VERSION}
+        container_name: logstash
     depends_on:
       - elasticsearch
     environment:
       - XPACK_MONITORING_ENABLED=false
+      - CHATGPT_API_KEY=${CHATGPT_API_KEY}
     ports:
       - "${LOGSTASH_PORT}:5000"
     networks:
       - elk-network
     volumes:
       - ./logstash/config:/usr/share/logstash/config
+      - ./logstash_data:/var/lib/logstash
       - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./mysql-connector-j-9.1.0.jar:/usr/share/logstash/tools/mysql-connector-j-9.1.0.jar
     command: "logstash -f /usr/share/logstash/pipeline/logstash.conf"
 
   kibana:
@@ -56,6 +79,17 @@ services:
     environment:
       ELASTICSEARCH_HOSTS: http://elasticsearch:9200
 
+  python_api:
+    build:
+      context: ./app
+    container_name: python_api
+    environment:
+      - CHATGPT_API_KEY=${CHATGPT_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - elk-network
+      
   nginx:
     image: nginx:latest
     container_name: nginx-proxy
@@ -64,7 +98,6 @@ services:
     volumes:
       - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
 
-
-networks:
-  elk-network:
-    driver: bridge
+  networks:
+    elk-network:
+      driver: bridge

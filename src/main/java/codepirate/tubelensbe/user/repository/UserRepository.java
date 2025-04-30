@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByGoogleId(String googleId);
     Optional<User> findByName(String name);
+    Optional<User> findByChannelId(String channelId);
+
 }

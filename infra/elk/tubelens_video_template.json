@@ -1,0 +1,97 @@
+{
+  "index_patterns": ["tubelens_video*"],
+  "template": {
+    "settings": {
+      "analysis": {
+        "tokenizer": {
+          "autocomplete_edge_ngram_tokenizer": {
+            "type": "edge_ngram",
+            "min_gram": 1,
+            "max_gram": 20,
+            "token_chars": ["letter", "digit", "whitespace"]
+          }
+        },
+        "filter": {
+          "autocomplete_edge_filter": {
+            "type": "edge_ngram",
+            "min_gram": 1,
+            "max_gram": 20
+          },
+          "pos_filter": {
+            "type": "nori_part_of_speech",
+            "stoptags": [
+              "E", "IC", "MAG", "MAJ", "MM", "SP", "SSC", "SSO", "SC", "SE",
+              "XPN", "XSA", "XSN", "XSV", "UNA", "NA", "VSV",
+              "JKS", "JKB", "JKC", "JKV", "JKQ", "JX", "JC", "EP", "EF", "EC", "ETN", "ETM"
+            ],
+            "keeptags": ["NNG", "NNP", "SL"]
+          }
+        },
+        "analyzer": {
+          "english_autocomplete_analyzer": {
+            "type": "custom",
+            "tokenizer": "autocomplete_edge_ngram_tokenizer",
+            "filter": ["lowercase"]
+          },
+          "english_search_analyzer": {
+            "type": "custom",
+            "tokenizer": "standard",
+            "filter": ["lowercase"]
+          },
+          "korean_autocomplete_analyzer": {
+            "type": "custom",
+            "tokenizer": "nori_tokenizer",
+            "filter": ["lowercase", "autocomplete_edge_filter", "pos_filter"]
+          },
+          "korean_search_analyzer": {
+            "type": "custom",
+            "tokenizer": "nori_tokenizer",
+            "filter": ["lowercase"]
+          }
+        }
+      }
+    },
+    "mappings": {
+      "properties": {
+        "title": {
+          "type": "text",
+          "fields": {
+            "en": {
+              "type": "text",
+              "analyzer": "english_autocomplete_analyzer",
+              "search_analyzer": "english_search_analyzer"
+            },
+            "ko": {
+              "type": "text",
+              "analyzer": "korean_autocomplete_analyzer",
+              "search_analyzer": "korean_search_analyzer"
+            },
+            "prefix": {
+              "type": "text",
+              "analyzer": "english_autocomplete_analyzer",
+              "search_analyzer": "standard"
+            },
+            "keyword": {
+              "type": "keyword"
+            }
+          }
+        },
+        "thumbnails": {
+          "type": "keyword"
+        },
+        "channelTitle": {
+          "type": "text"
+        },
+        "viewCount": {
+          "type": "long"
+        },
+        "publishedAt": {
+          "type": "date"
+        },
+        "suggest": {
+          "type": "completion"
+        }
+      }
+    }
+  }
+}
