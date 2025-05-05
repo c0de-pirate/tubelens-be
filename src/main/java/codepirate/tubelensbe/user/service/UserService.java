@@ -2,6 +2,8 @@ package codepirate.tubelensbe.user.service;
 
 import codepirate.tubelensbe.TubelensBeApplication;
 import codepirate.tubelensbe.auth.common.Authority;
+import codepirate.tubelensbe.auth.refreshtoken.RefreshToken;
+import codepirate.tubelensbe.auth.refreshtoken.RefreshTokenRepository;
 import codepirate.tubelensbe.user.domain.User;
 import codepirate.tubelensbe.user.exception.YouTubeApiException;
 import codepirate.tubelensbe.user.repository.UserRepository;
@@ -49,6 +51,7 @@ public class UserService {
     private String clientSecret;
 
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     public Optional<User> findByGoogleId(String googleId) {
@@ -57,6 +60,18 @@ public class UserService {
 
     public Optional<User> findByName(String name) {
         return userRepository.findByName(name);
+    }
+
+    public String findByChannelId(String refreshToken) {
+        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken);
+        User user = tokenEntity.getUser();  // RefreshToken -> User
+        String channelId = user.getChannelId();  // User -> channelId
+
+        if (channelId == null) {
+            throw new IllegalStateException("사용자에 채널 ID가 등록되어 있지 않습니다.");
+        }
+
+        return channelId;
     }
 
     public Map<String, Object> processOAuth2User(OAuth2AuthenticationToken oauthToken, OAuth2User oauth2User) {
@@ -143,7 +158,7 @@ public class UserService {
         }
         userInfo.put("picture", pictureUrl);
         userInfo.put("googleId", user.getGoogleId());
-        userInfo.put("channel_id", user.getChannel_id()); // 채널 ID 추가
+        userInfo.put("channel_id", user.getChannelId()); // 채널 ID 추가
         userInfo.put("hire_date", user.getHire_date()); // 가입일 추가
         return userInfo;
     }
@@ -208,7 +223,7 @@ public class UserService {
     }
 
     private void fetchAndSetChannelId(User user, OAuth2TokenInfo tokenInfo) {
-        if ((user.getChannel_id() == null || user.getChannel_id().isEmpty()) && tokenInfo.accessToken != null) {
+        if ((user.getChannelId() == null || user.getChannelId().isEmpty()) && tokenInfo.accessToken != null) {
             try {
                 // 비동기 호출
                 CompletableFuture<String> channelIdFuture =
@@ -217,7 +232,7 @@ public class UserService {
                 // 비동기 결과 처리
                 channelIdFuture.thenAccept(channelId -> {
                     if (channelId != null && !channelId.isEmpty()) {
-                        user.setChannel_id(channelId);
+                        user.setChannelId(channelId);
                         userRepository.save(user);
                     }
                 }).exceptionally(ex -> {
