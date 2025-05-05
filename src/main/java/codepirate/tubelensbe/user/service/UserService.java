@@ -1,23 +1,30 @@
 package codepirate.tubelensbe.user.service;
 
+import codepirate.tubelensbe.TubelensBeApplication;
 import codepirate.tubelensbe.auth.common.Authority;
-import codepirate.tubelensbe.auth.refreshtoken.RefreshToken;
-import codepirate.tubelensbe.auth.refreshtoken.RefreshTokenRepository;
 import codepirate.tubelensbe.user.domain.User;
+import codepirate.tubelensbe.user.exception.YouTubeApiException;
 import codepirate.tubelensbe.user.repository.UserRepository;
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.api.client.auth.oauth2.BearerToken;
+import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.ChannelListResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -25,9 +32,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class UserService {
+
+    private final static Logger Log = LoggerFactory.getLogger(TubelensBeApplication.class);
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
@@ -37,14 +50,6 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final OAuth2AuthorizedClientService authorizedClientService;
-    private final RefreshTokenRepository refreshTokenRepository;
-
-    @Autowired
-    public UserService(UserRepository userRepository, OAuth2AuthorizedClientService authorizedClientService,RefreshTokenRepository refreshTokenRepository) {
-        this.userRepository = userRepository;
-        this.authorizedClientService = authorizedClientService;
-        this.refreshTokenRepository = refreshTokenRepository;
-    }
 
     public Optional<User> findByGoogleId(String googleId) {
         return userRepository.findByGoogleId(googleId);
@@ -54,30 +59,13 @@ public class UserService {
         return userRepository.findByName(name);
     }
 
-    public String findByChannelId(String refreshToken) {
-        RefreshToken tokenEntity = refreshTokenRepository.findByToken(refreshToken);
-        User user = tokenEntity.getUser();  // RefreshToken -> User
-        String channelId = user.getChannelId();  // User -> channelId
-
-        if (channelId == null) {
-            throw new IllegalStateException("사용자에 채널 ID가 등록되어 있지 않습니다.");
-        }
-
-        return channelId;
-    }
-
     public Map<String, Object> processOAuth2User(OAuth2AuthenticationToken oauthToken, OAuth2User oauth2User) {
         String googleId = oauth2User.getAttribute("sub");
-
         OAuth2TokenInfo tokenInfo = getOAuth2TokenInfo(oauthToken);
 
-        Optional<User> userOptional = userRepository.findByGoogleId(googleId);
-
-        if (userOptional.isPresent()) {
-            return processExistingUser(userOptional.get(), tokenInfo);
-        } else {
-            return processNewUser(oauth2User, tokenInfo);
-        }
+        return userRepository.findByGoogleId(googleId)
+                .map(user -> processExistingUser(user, tokenInfo))
+                .orElseGet(() -> processNewUser(oauth2User, tokenInfo));
     }
 
     public Map<String, Object> processJwtUser(UserDetails userDetails) {
@@ -96,17 +84,7 @@ public class UserService {
 
     //youtube api v3 호출
     private Map<String, Object> processExistingUser(User user, OAuth2TokenInfo tokenInfo) {
-        if ((user.getChannelId() == null || user.getChannelId().isEmpty()) && tokenInfo.accessToken != null) {
-            try {
-                String channelId = fetchMyChannelId(tokenInfo.accessToken, tokenInfo.refreshToken);
-                if (channelId != null && !channelId.isEmpty()) {
-                    user.setChannelId(channelId);
-                    userRepository.save(user);
-                }
-            } catch (Exception e) {
-                System.err.println("YouTube 채널 ID 가져오기 실패: " + e.getMessage());
-            }
-        }
+        fetchAndSetChannelId(user, tokenInfo);
 
         if (user.getHire_date() == null) {
             user.setHire_date(new java.util.Date());
@@ -116,6 +94,7 @@ public class UserService {
         return convertUserToMap(user);
     }
 
+    @Transactional
     private Map<String, Object> processNewUser(OAuth2User oauth2User, OAuth2TokenInfo tokenInfo) {
         String googleId = oauth2User.getAttribute("sub");
 
@@ -127,20 +106,7 @@ public class UserService {
                 Authority.ROLE_USER
         );
 
-        user = userRepository.save(user);
-
-        // 액세스 토큰이 있으면 YouTube API 호출하여 채널 ID 가져오기
-        if (tokenInfo.accessToken != null) {
-            try {
-                String channelId = fetchMyChannelId(tokenInfo.accessToken, tokenInfo.refreshToken);
-                if (channelId != null && !channelId.isEmpty()) {
-                    user.setChannelId(channelId);
-                    userRepository.save(user);
-                }
-            } catch (Exception e) {
-                System.err.println("YouTube 채널 ID 가져오기 실패: " + e.getMessage());
-            }
-        }
+        fetchAndSetChannelId(user, tokenInfo);
 
         return convertUserToMap(user);
     }
@@ -177,21 +143,25 @@ public class UserService {
         }
         userInfo.put("picture", pictureUrl);
         userInfo.put("googleId", user.getGoogleId());
-        userInfo.put("channel_id", user.getChannelId()); // 채널 ID 추가
+        userInfo.put("channel_id", user.getChannel_id()); // 채널 ID 추가
         userInfo.put("hire_date", user.getHire_date()); // 가입일 추가
         return userInfo;
     }
 
     private YouTube getYoutubeClient(String accessToken, String refreshToken) throws GeneralSecurityException, IOException {
-        GoogleCredential credential = new GoogleCredential.Builder()
-                .setTransport(GoogleNetHttpTransport.newTrustedTransport())
-                .setJsonFactory(JacksonFactory.getDefaultInstance())
-                .setClientSecrets(clientId, clientSecret)
-                .build()
-                .setAccessToken(accessToken)
-                .setRefreshToken(refreshToken);
+        HttpTransport httpTransport = GoogleNetHttpTransport.newTrustedTransport();
+        JacksonFactory jsonFactory = JacksonFactory.getDefaultInstance();
 
-        return new YouTube.Builder(credential.getTransport(), credential.getJsonFactory(), credential)
+        // OAuth2Credentials 사용
+        Credential credential = new Credential.Builder(BearerToken.authorizationHeaderAccessMethod())
+                .setTransport(httpTransport)
+                .setJsonFactory(jsonFactory)
+                .build();
+
+        credential.setAccessToken(accessToken);
+        credential.setRefreshToken(refreshToken);
+
+        return new YouTube.Builder(httpTransport, jsonFactory, credential)
                 .setApplicationName("TubelensBeApplication")
                 .build();
     }
@@ -210,19 +180,61 @@ public class UserService {
             if (channelResponse.getItems().isEmpty()) {
                 throw new IllegalStateException("채널 ID를 찾을 수 없습니다.");
             }
-        } catch (IOException | GeneralSecurityException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            log.error("""
+                    YouTube API 호출 중 오류가 발생했습니다:
+                    메시지: {}
+                    액세스 토큰: {}
+                    """, e.getMessage(), accessToken);
+            throw new YouTubeApiException("YouTube API에 접근할 수 없습니다", e);
+        } catch (GeneralSecurityException e) {
+            log.error("YouTube API 보안 오류: {}", e.getMessage(), e);
+            throw new YouTubeApiException("YouTube API 보안 설정에 문제가 있습니다", e);
         }
         return channelResponse.getItems().get(0).getId();
     }
 
-    private static class OAuth2TokenInfo {
-        final String accessToken;
-        final String refreshToken;
+    @Async
+    @Transactional
+    public CompletableFuture<String> fetchChannelIdAsync(String accessToken, String refreshToken) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return fetchMyChannelId(accessToken, refreshToken);
+            } catch (Exception e) {
+                log.error("채널 ID 조회 실패", e);
+                return null;
+            }
+        }, Executors.newVirtualThreadPerTaskExecutor());
+    }
 
-        OAuth2TokenInfo(String accessToken, String refreshToken) {
-            this.accessToken = accessToken;
-            this.refreshToken = refreshToken;
+    private void fetchAndSetChannelId(User user, OAuth2TokenInfo tokenInfo) {
+        if ((user.getChannel_id() == null || user.getChannel_id().isEmpty()) && tokenInfo.accessToken != null) {
+            try {
+                // 비동기 호출
+                CompletableFuture<String> channelIdFuture =
+                        fetchChannelIdAsync(tokenInfo.accessToken, tokenInfo.refreshToken);
+
+                // 비동기 결과 처리
+                channelIdFuture.thenAccept(channelId -> {
+                    if (channelId != null && !channelId.isEmpty()) {
+                        user.setChannel_id(channelId);
+                        userRepository.save(user);
+                    }
+                }).exceptionally(ex -> {
+                    log.error("YouTube 채널 ID 가져오기 실패: " + ex.getMessage());
+                    return null;
+                });
+
+                // 선택 사항: 결과를 기다리려면 (비동기의 장점이 줄어듦)
+                // String channelId = channelIdFuture.get(5, TimeUnit.SECONDS);
+
+            } catch (Exception e) {
+                log.error("YouTube 채널 ID 가져오기 실패: " + e.getMessage());
+            }
         }
+    }
+
+
+    private record OAuth2TokenInfo(String accessToken, String refreshToken) {
     }
 }

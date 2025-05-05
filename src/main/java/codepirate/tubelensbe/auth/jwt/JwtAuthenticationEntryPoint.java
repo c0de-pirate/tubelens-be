@@ -14,8 +14,19 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
-                         AuthenticationException authException) throws IOException, ServletException {
-        // 유효한 자격 증명 없이 보호된 리소스에 접근하려 할 때 401 Unauthorized 에러를 응답합니다.
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                         AuthenticationException authException) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+
+        // JSON 형태로 에러 응답 커스터마이징
+        String jsonResponse = String.format(
+                "{\"timestamp\": \"%s\", \"status\": %d, \"error\": \"Unauthorized\", \"message\": \"%s\", \"path\": \"%s\"}",
+                new java.util.Date(),
+                HttpServletResponse.SC_UNAUTHORIZED,
+                authException.getMessage() != null ? authException.getMessage() : "인증이 필요한 리소스입니다.",
+                request.getRequestURI()
+        );
+
+        response.getWriter().write(jsonResponse);
     }
 }

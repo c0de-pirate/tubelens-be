@@ -1,5 +1,6 @@
 package codepirate.tubelensbe.user.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Map;
 import codepirate.tubelensbe.user.service.UserService;
@@ -15,28 +16,27 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @GetMapping("/user/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal Object principal) {
-        if (principal instanceof OAuth2User) {
-            OAuth2User oauth2User = (OAuth2User) principal;
-            OAuth2AuthenticationToken oauthToken =
-                    (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-            return ResponseEntity.ok(userService.processOAuth2User(oauthToken, oauth2User));
-
-        } else if (principal instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) principal;
-            return ResponseEntity.ok(userService.processJwtUser(userDetails));
-
-        } else if (principal != null && !"anonymousUser".equals(principal.toString())) { //방어적 예외처리임 ㅇㅇ.. 지워도됨
-            return ResponseEntity.ok(Map.of("name", principal.toString()));
-        }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public ResponseEntity<Map<String, Object>> getCurrentUser(@AuthenticationPrincipal Object principal) {
+        return switch (principal) {
+            case OAuth2User oauth2User -> {
+                var oauthToken = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+                yield ResponseEntity.ok(userService.processOAuth2User(oauthToken, oauth2User));
+            }
+            case UserDetails userDetails -> ResponseEntity.ok(userService.processJwtUser(userDetails));
+            case null -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            default -> {
+                if (!"anonymousUser".equals(principal.toString())) {
+                    yield ResponseEntity.ok(Map.of("name", principal.toString()));
+                } else {
+                    yield ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                }
+            }
+        };
     }
 }

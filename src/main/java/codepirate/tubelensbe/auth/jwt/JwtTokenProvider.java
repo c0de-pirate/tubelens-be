@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.security.core.userdetails.User;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -19,7 +20,9 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {
     private final Key secretKey;
-    private static final long tokenValidityInMs = 30 * 60 * 1000; // Access Token 유효 시간 (30분)
+
+    @Value("${jwt.access-token-expiry}")// Access Token 유효 시간 (30분)
+    private long tokenValidityInMs;
 
     public JwtTokenProvider(@Value("${jwt.secret.key}") String key) {
         this.secretKey = Keys.hmacShaKeyFor(key.getBytes(StandardCharsets.UTF_8));
@@ -69,7 +72,7 @@ public class JwtTokenProvider {
         String username = claims.getSubject();
         List<String> roles = claims.get("roles", List.class);
 
-        return new org.springframework.security.core.userdetails.User(username, "",
+        return new User(username, "",
                 roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList()));
     }
 
@@ -78,7 +81,6 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
         } catch (Exception e) {
-            // 토큰 유효성 검증 실패 시 (만료, 위변조 등) false 반환
             return false;
         }
     }
