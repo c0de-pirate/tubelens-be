@@ -17,7 +17,7 @@ public class SentimentController {
     private final SentimentService sentimentService;
 
     @GetMapping("/{videoId}")
-    private ResponseEntity<SentimentPercent> sentimentComments(@PathVariable String videoId) {
+    public ResponseEntity<SentimentPercent> sentimentComments(@PathVariable String videoId) {
         return ResponseEntity.ok(sentimentService.getYoutubeComments(videoId));
     }
 }
