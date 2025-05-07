@@ -91,6 +91,8 @@ services:
       - "8000:8000"
     networks:
       - elk-network
+    volumes:
+      - ./app:/app
       
   nginx:
     image: nginx:latest

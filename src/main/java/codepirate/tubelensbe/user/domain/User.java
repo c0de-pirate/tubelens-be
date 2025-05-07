@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
+
 @Entity(name = "user")
 @Getter
 @Setter
@@ -46,6 +48,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Authority authority;
+
+    @Column(nullable = true, length = 2000)
+    private String googleAccessToken;
+
+    @Column(nullable = true, length = 2000)
+    private String googleRefreshToken;
+
+    @Column(nullable = true)
+    private Instant googleTokenExpiryDate;
 
     public User(String googleId, String name, String email, String picture, Authority authority) {
         this.googleId = googleId;

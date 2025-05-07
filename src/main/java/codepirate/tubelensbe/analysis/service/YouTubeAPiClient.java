@@ -72,25 +72,47 @@ public class YouTubeAPiClient {
         try {
             searchListResponse = searchRequest.execute();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("YouTube API 호출 실패: {}", e.getMessage(), e);
+            return allTags; // 빈 리스트 반환
         }
+
+        // 여기에 null 체크 추가
         List<SearchResult> items = searchListResponse.getItems();
+        if (items == null) {
+            log.warn("YouTube API 응답에 items가 null입니다. channelId: {}", channelId);
+            return allTags; // 빈 리스트 반환
+        }
 
         for (SearchResult searchResult : items) {
-            String videoId = searchResult.getId().getVideoId();
-
-            YouTube.Videos.List videoRequest = youtube.videos().list(List.of("snippet"));
-            videoRequest.setId(List.of(videoId));
-            videoRequest.setKey(youtubeApiKey);
-
-            VideoListResponse videoListResponse = videoRequest.execute();
-
-            for (Video video : videoListResponse.getItems()) {
-                if (video.getSnippet().getTags() != null) {
-                    allTags.addAll(video.getSnippet().getTags());
-                }
+            // null 체크 추가
+            if (searchResult.getId() == null || searchResult.getId().getVideoId() == null) {
+                continue; // 이 항목 건너뛰기
             }
 
+            String videoId = searchResult.getId().getVideoId();
+
+            try {
+                YouTube.Videos.List videoRequest = youtube.videos().list(List.of("snippet"));
+                videoRequest.setId(List.of(videoId));
+                videoRequest.setKey(youtubeApiKey);
+
+                VideoListResponse videoListResponse = videoRequest.execute();
+
+                // null 체크 추가
+                if (videoListResponse.getItems() == null) {
+                    continue;
+                }
+
+                for (Video video : videoListResponse.getItems()) {
+                    // null 체크 추가
+                    if (video.getSnippet() != null && video.getSnippet().getTags() != null) {
+                        allTags.addAll(video.getSnippet().getTags());
+                    }
+                }
+            } catch (Exception e) {
+                log.error("비디오 정보 가져오기 실패 (videoId: {}): {}", videoId, e.getMessage());
+                // 한 비디오에서 오류가 발생해도 계속 진행
+            }
         }
         return allTags;
     }

@@ -10,7 +10,7 @@ import org.springframework.web.service.annotation.PostExchange;
 import java.util.List;
 
 @Component
-@HttpExchange("http://localhost:3000")
+@HttpExchange("http://localhost:8000/api")
 public interface PythonRepository {
 
     @PostExchange("/encode")
