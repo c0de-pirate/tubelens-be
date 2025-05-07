@@ -42,5 +42,30 @@ public class TrendingVideoController {
 
         return trendingVideoService.recommVideos(idlist);
     }
+
+
+    @GetMapping("/trending/likes")
+    @ResponseBody
+    public List<TrendingVideo> getTrendingVideosByLikes(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String period
+    ) {
+        if ("today".equals(period)) {
+            return trendingVideoService.getTodayTopVideosByLikes(limit);
+        }
+        return trendingVideoService.getTopVideosByLikes(limit);
+    }
+
+    @GetMapping("/trending/views")
+    @ResponseBody
+    public List<TrendingVideo> getTrendingVideosByViews(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(required = false) String period
+    ) {
+        if ("today".equals(period)) {
+            return trendingVideoService.getTodayTopVideosByViews(limit);
+        }
+        return trendingVideoService.getTopVideosByViews(limit);
+    }
 }
 
